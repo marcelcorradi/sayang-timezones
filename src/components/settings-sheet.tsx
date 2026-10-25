@@ -2,6 +2,7 @@ import * as React from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Copy01Icon, Settings02Icon, Tick02Icon } from "@hugeicons/core-free-icons"
 
+import { NotifySetup } from "@/components/notify-setup"
 import { useTheme } from "@/components/theme-provider"
 import { VaultCta } from "@/components/vault-setup"
 import { Button } from "@/components/ui/button"
@@ -12,7 +13,6 @@ import { couple } from "@/data/couple"
 import type { Lang, PersonId } from "@/data/types"
 import { useCopy } from "@/hooks/use-copy"
 import { LANG_NAMES } from "@/lib/i18n"
-import { NTFY_APPS, topicFor } from "@/lib/ntfy"
 import { usePrefs } from "@/lib/prefs"
 import { PEOPLE, partnerOf } from "@/lib/schedule"
 import { useVault } from "@/lib/vault/vault"
@@ -99,28 +99,7 @@ export function SettingsSheet() {
 
           {doc && me && (
             <Setting label={t("notifyTitle")}>
-              <p className="text-sm text-muted-foreground">
-                {t("notifyHint", { name: partner ? couple.people[partner].name : "" })}
-              </p>
-              <div className="flex items-center gap-2 rounded-2xl bg-muted px-3 py-2">
-                <code className="flex-1 truncate text-xs">{topicFor(doc.ntfyTopic, me)}</code>
-                <Button variant="ghost" size="sm" onClick={() => copy(topicFor(doc.ntfyTopic, me), "topic")}>
-                  <HugeiconsIcon
-                    icon={copied === "topic" ? Tick02Icon : Copy01Icon}
-                    strokeWidth={2}
-                    data-icon="inline-start"
-                  />
-                  {copied === "topic" ? t("copied") : t("copyTopic")}
-                </Button>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" render={<a href={NTFY_APPS.android} target="_blank" rel="noreferrer" />}>
-                  Android
-                </Button>
-                <Button variant="outline" size="sm" render={<a href={NTFY_APPS.ios} target="_blank" rel="noreferrer" />}>
-                  iPhone
-                </Button>
-              </div>
+              <NotifySetup me={me} baseTopic={doc.ntfyTopic} />
             </Setting>
           )}
 
