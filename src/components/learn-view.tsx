@@ -11,7 +11,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { couple } from "@/data/couple"
 import { TIPS } from "@/data/tips"
 import type { Lang, PersonId } from "@/data/types"
-import { TOPICS, VOCAB, type Topic, type VocabItem } from "@/data/vocab"
+import { noteFor, TOPICS, VOCAB, type Topic, type VocabItem } from "@/data/vocab"
 import {
   buildLesson,
   currentStreak,
@@ -57,11 +57,14 @@ export function LearnView({ me, now }: { me: PersonId; now: number }) {
   const start = (topic: Topic | "review") => {
     const options = { target, base, canListen: hasVoice(target) }
     if (topic === "review") {
-      const questions = buildLesson(dueItems(progress, today), dueSentences(progress, today), progress, today, options)
+      const questions = buildLesson(dueItems(progress, today), dueSentences(progress, today), progress, today, {
+        ...options,
+        review: true,
+      })
       if (questions.length) setLesson({ questions })
       return
     }
-    const questions = buildLesson(itemsOf(topic), sentencesOf(topic), progress, today, options)
+    const questions = buildLesson(itemsOf(topic), sentencesOf(topic), progress, today, { ...options, topic })
     // Toda palavra da lição que ainda não foi aprendida ganha um cartão antes das perguntas,
     // pra nenhuma pergunta cair numa palavra que não foi apresentada.
     const newItems = new Map<string, VocabItem>()
@@ -173,7 +176,7 @@ function WordOfTheDay({ target, base, day }: { target: Lang; base: Lang; day: nu
   const [picked, setPicked] = React.useState<number | null>(null)
   const index = picked ?? ((day % VOCAB.length) + VOCAB.length) % VOCAB.length
   const word = VOCAB[index]
-  const note = word.note?.[base]
+  const note = noteFor(word, target, base)
 
   return (
     <Card size="sm">

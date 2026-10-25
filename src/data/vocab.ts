@@ -5,6 +5,12 @@ import type { Lang } from "./types"
  * Cada entrada precisa ter `text.pt`, `text.en` e `text.id` (indonésio); `note` é opcional.
  * Para crescer o curso, adicione entradas aqui ou um tema novo em TOPICS.
  */
+
+/**
+ * Observação de uma palavra, como em UNIT_INTROS: note[idioma que está aprendendo][idioma de quem lê].
+ * Uma nota sobre o indonésio só aparece pra quem aprende indonésio.
+ */
+export type Note = Partial<Record<Lang, Partial<Record<Lang, string>>>>
 export type Topic =
   | "greetings"
   | "basics"
@@ -31,7 +37,7 @@ export interface VocabItem {
   key: string
   topic: Topic
   text: Record<Lang, string>
-  note?: Record<Lang, string>
+  note?: Note
 }
 
 /** As unidades do curso, na ordem em que aparecem. */
@@ -58,50 +64,67 @@ export const TOPICS: { id: Topic; emoji: string; title: Record<Lang, string> }[]
   { id: "phrases", emoji: "💬", title: { pt: "Frases do dia a dia", en: "Everyday phrases", id: "Kalimat sehari-hari" } },
 ]
 
-const v = (key: string, topic: Topic, pt: string, en: string, id: string, note?: Record<Lang, string>): VocabItem => ({
+const v = (key: string, topic: Topic, pt: string, en: string, id: string, note?: Note): VocabItem => ({
   key,
   topic,
   text: { pt, en, id },
   note,
 })
 
+export const noteFor = (item: VocabItem, target: Lang, base: Lang) => item.note?.[target]?.[base]
+
+/** Palavras que podem ser a tradução uma da outra; nunca aparecem como alternativa errada entre si. */
+export const CONFUSABLE: string[][] = [
+  ["darling", "love"],
+  ["sorry", "forgive-me"],
+  ["dont-worry", "no-problem"],
+  ["good-evening", "sleep-well"],
+]
+
 export const VOCAB: VocabItem[] = [
   v("hi", "greetings", "oi", "hi", "hai"),
   v("good-morning", "greetings", "bom dia", "good morning", "selamat pagi"),
   v("good-afternoon", "greetings", "boa tarde", "good afternoon", "selamat siang", {
-    pt: "Em indonésio, “siang” vai até umas 15h. No fim da tarde se diz “selamat sore”.",
-    en: "In Indonesian, “siang” lasts until about 3pm. Late afternoon is “selamat sore”.",
-    id: "Di Portugis, “boa tarde” dipakai dari siang sampai sore.",
+    id: {
+      pt: "Em indonésio, “siang” vai até umas 15h. No fim da tarde se diz “selamat sore”.",
+      en: "In Indonesian, “siang” lasts until about 3pm. Late afternoon is “selamat sore”.",
+    },
+    pt: { id: "Dalam bahasa Portugis, “boa tarde” dipakai dari siang sampai sore." },
   }),
   v("good-evening", "greetings", "boa noite", "good evening", "selamat malam"),
   v("sleep-well", "greetings", "durma bem", "sleep well", "selamat tidur"),
   v("how-are-you", "greetings", "tudo bem?", "how are you?", "apa kabar?"),
   v("im-fine", "greetings", "estou bem", "I'm fine", "aku baik-baik saja"),
   v("thank-you", "greetings", "obrigado, obrigada", "thank you", "terima kasih", {
-    pt: "Em português, homem diz “obrigado” e mulher diz “obrigada”.",
-    en: "In Portuguese, men say “obrigado” and women say “obrigada”.",
-    id: "Di Portugis, laki-laki bilang “obrigado”, perempuan bilang “obrigada”.",
+    pt: {
+      en: "In Portuguese, men say “obrigado” and women say “obrigada”.",
+      id: "Dalam bahasa Portugis, laki-laki bilang “obrigado”, perempuan bilang “obrigada”.",
+    },
   }),
   v("welcome-reply", "greetings", "de nada", "you're welcome", "sama-sama"),
   v("see-you", "greetings", "até logo", "see you", "sampai jumpa"),
   v("sorry", "greetings", "desculpa", "sorry", "maaf"),
   v("please", "greetings", "por favor", "please", "tolong", {
-    pt: "“Tolong” é pra pedir algo. Pra oferecer (“fique à vontade”), se diz “silakan”.",
-    en: "“Tolong” is for asking. When offering (“go ahead”), say “silakan”.",
-    id: "Di Portugis, “por favor” dipakai untuk minta tolong maupun mempersilakan.",
+    id: {
+      pt: "“Tolong” é pra pedir algo. Pra oferecer (“fique à vontade”), se diz “silakan”.",
+      en: "“Tolong” is for asking. When offering (“go ahead”), say “silakan”.",
+    },
+    pt: { id: "Dalam bahasa Portugis, “por favor” dipakai untuk minta tolong maupun mempersilakan." },
   }),
   v("welcome", "greetings", "bem-vindo, bem-vinda", "welcome", "selamat datang"),
 
   v("yes", "basics", "sim", "yes", "ya"),
   v("no", "basics", "não", "no", "tidak", {
-    pt: "No dia a dia, quase todo mundo fala “nggak”.",
-    en: "In everyday speech, most people say “nggak”.",
-    id: "Di Portugis, “não” dipakai di semua situasi.",
+    id: {
+      pt: "No dia a dia, quase todo mundo fala “nggak”.",
+      en: "In everyday speech, most people say “nggak”.",
+    },
+    pt: { id: "Dalam bahasa Portugis, “não” dipakai di semua situasi, resmi maupun santai." },
   }),
   v("i", "basics", "eu", "I", "aku"),
   v("you", "basics", "você", "you", "kamu"),
   v("we", "basics", "nós", "we", "kita"),
-  v("this", "basics", "isso", "this", "ini"),
+  v("this", "basics", "isto, isso", "this", "ini"),
   v("that", "basics", "aquilo", "that", "itu"),
   v("water", "basics", "água", "water", "air"),
   v("house", "basics", "casa", "house", "rumah"),
@@ -121,9 +144,11 @@ export const VOCAB: VocabItem[] = [
   v("partner", "love", "namorado, namorada", "boyfriend, girlfriend", "pacar"),
   v("soulmate", "love", "alma gêmea", "soulmate", "belahan jiwa"),
   v("heart", "love", "coração", "heart", "hati", {
-    pt: "“Hati” é o coração dos sentimentos. O órgão se chama “jantung”.",
-    en: "“Hati” is the heart of feelings. The organ is “jantung”.",
-    id: "Di Portugis, “coração” dipakai untuk perasaan dan juga organ jantung.",
+    id: {
+      pt: "“Hati” é o coração dos sentimentos. O órgão se chama “jantung”.",
+      en: "“Hati” is the heart of feelings. The organ is “jantung”.",
+    },
+    pt: { id: "Dalam bahasa Portugis, “coração” dipakai untuk perasaan dan juga organ jantung." },
   }),
   v("together", "love", "juntos", "together", "bersama"),
   v("forever", "love", "para sempre", "forever", "selamanya"),
@@ -154,18 +179,22 @@ export const VOCAB: VocabItem[] = [
   v("hour", "time", "hora", "hour", "jam"),
   v("day", "time", "dia", "day", "hari"),
   v("week", "time", "semana", "week", "minggu", {
-    pt: "“Minggu” também quer dizer domingo.",
-    en: "“Minggu” also means Sunday.",
-    id: "Di Portugis, minggu adalah “semana” dan hari Minggu adalah “domingo”.",
+    id: {
+      pt: "“Minggu” também quer dizer domingo.",
+      en: "“Minggu” also means Sunday.",
+    },
+    pt: { id: "Dalam bahasa Portugis, minggu adalah “semana” dan hari Minggu adalah “domingo”." },
   }),
   v("weekend", "time", "fim de semana", "weekend", "akhir pekan"),
 
   v("to-eat", "food", "comer", "to eat", "makan"),
   v("to-drink", "food", "beber", "to drink", "minum"),
   v("rice", "food", "arroz", "rice", "nasi", {
-    pt: "“Nasi” é o arroz já cozido. O grão cru se chama “beras”.",
-    en: "“Nasi” is cooked rice. Uncooked rice is “beras”.",
-    id: "Di Portugis, nasi dan beras sama-sama disebut “arroz”.",
+    id: {
+      pt: "“Nasi” é o arroz já cozido. O grão cru se chama “beras”.",
+      en: "“Nasi” is cooked rice. Uncooked rice is “beras”.",
+    },
+    pt: { id: "Dalam bahasa Portugis, nasi dan beras sama-sama disebut “arroz”." },
   }),
   v("chicken", "food", "frango", "chicken", "ayam"),
   v("coffee", "food", "café", "coffee", "kopi"),
@@ -177,9 +206,10 @@ export const VOCAB: VocabItem[] = [
   v("dinner", "food", "jantar", "dinner", "makan malam"),
   v("fried-rice", "food", "arroz frito", "fried rice", "nasi goreng"),
   v("cheese-bread", "food", "pão de queijo", "cheese bread", "roti keju", {
-    pt: "O pão de queijo é de Minas Gerais, a terra do Marcel.",
-    en: "Pão de queijo comes from Minas Gerais, where Marcel lives.",
-    id: "Pão de queijo berasal dari Minas Gerais, tempat Marcel tinggal.",
+    pt: {
+      en: "Pão de queijo comes from Minas Gerais, where Marcel lives.",
+      id: "Pão de queijo berasal dari Minas Gerais, tempat Marcel tinggal.",
+    },
   }),
 
   v("what", "questions", "o quê?", "what?", "apa?"),
@@ -192,9 +222,11 @@ export const VOCAB: VocabItem[] = [
   v("what-time", "questions", "que horas são?", "what time is it?", "jam berapa sekarang?"),
   v("what-doing", "questions", "o que você está fazendo?", "what are you doing?", "kamu lagi apa?"),
   v("have-you-eaten", "questions", "você já comeu?", "have you eaten?", "sudah makan?", {
-    pt: "Na Indonésia é um jeito carinhoso de perguntar se a pessoa está bem.",
-    en: "In Indonesia it's a caring way to ask if someone is okay.",
-    id: "Di Brasil orang lebih sering tanya “tudo bem?”.",
+    id: {
+      pt: "Na Indonésia é um jeito carinhoso de perguntar se a pessoa está bem.",
+      en: "In Indonesia it's a caring way to ask if someone is okay.",
+    },
+    pt: { id: "Di Brasil orang lebih sering tanya “tudo bem?”." },
   }),
   v("are-you-free", "questions", "você está livre?", "are you free?", "kamu lagi senggang?"),
   v("can-i-call", "questions", "posso te ligar?", "can I call you?", "boleh aku telepon kamu?"),
@@ -226,14 +258,18 @@ export const VOCAB: VocabItem[] = [
   v("nine", "numbers", "nove", "nine", "sembilan"),
   v("ten", "numbers", "dez", "ten", "sepuluh"),
   v("eleven", "numbers", "onze", "eleven", "sebelas", {
-    pt: "De 11 a 19 se usa “belas”: 12 = dua belas, 15 = lima belas.",
-    en: "From 11 to 19 Indonesian uses “belas”: 12 = dua belas, 15 = lima belas.",
-    id: "Di Portugis, 11 sampai 15 punya nama sendiri: onze, doze, treze, catorze, quinze.",
+    id: {
+      pt: "De 11 a 19 se usa “belas”: 12 = dua belas, 15 = lima belas.",
+      en: "From 11 to 19 Indonesian uses “belas”: 12 = dua belas, 15 = lima belas.",
+    },
+    pt: { id: "Dalam bahasa Portugis, 11 sampai 15 punya nama sendiri: onze, doze, treze, catorze, quinze." },
   }),
   v("twenty", "numbers", "vinte", "twenty", "dua puluh", {
-    pt: "As dezenas são número + “puluh”: 20 = dua puluh, 30 = tiga puluh.",
-    en: "Tens are number + “puluh”: 20 = dua puluh, 30 = tiga puluh.",
-    id: "Di Portugis, puluhan punya nama sendiri: vinte (20), trinta (30), quarenta (40).",
+    id: {
+      pt: "As dezenas são número + “puluh”: 20 = dua puluh, 30 = tiga puluh.",
+      en: "Tens are number + “puluh”: 20 = dua puluh, 30 = tiga puluh.",
+    },
+    pt: { id: "Dalam bahasa Portugis, puluhan punya nama sendiri: vinte (20), trinta (30), quarenta (40)." },
   }),
   v("hundred", "numbers", "cem", "one hundred", "seratus"),
   v("thousand", "numbers", "mil", "one thousand", "seribu"),
@@ -253,9 +289,11 @@ export const VOCAB: VocabItem[] = [
   v("mother", "family", "mãe", "mother", "ibu"),
   v("father", "family", "pai", "father", "ayah"),
   v("older-sibling", "family", "irmão ou irmã mais velha", "older brother or sister", "kakak", {
-    pt: "Em indonésio, irmão é por idade, não por gênero: “kakak” é o mais velho, “adik” o mais novo.",
-    en: "Indonesian names siblings by age, not gender: “kakak” is older, “adik” is younger.",
-    id: "Di Portugis, saudara dibedakan menurut jenis kelamin: irmão (laki-laki), irmã (perempuan).",
+    id: {
+      pt: "Em indonésio, irmão é por idade, não por gênero: “kakak” é o mais velho, “adik” o mais novo.",
+      en: "Indonesian names siblings by age, not gender: “kakak” is older, “adik” is younger.",
+    },
+    pt: { id: "Dalam bahasa Portugis, saudara dibedakan menurut jenis kelamin: irmão (laki-laki), irmã (perempuan)." },
   }),
   v("younger-sibling", "family", "irmão ou irmã mais nova", "younger brother or sister", "adik"),
   v("child", "family", "filho, filha", "child", "anak"),
@@ -276,9 +314,11 @@ export const VOCAB: VocabItem[] = [
   v("saturday", "days", "sábado", "Saturday", "Sabtu"),
   v("sunday", "days", "domingo", "Sunday", "Minggu"),
   v("month", "days", "mês", "month", "bulan", {
-    pt: "“Bulan” também quer dizer lua.",
-    en: "“Bulan” also means moon.",
-    id: "Di Portugis, bulan (waktu) adalah “mês” dan bulan di langit adalah “lua”.",
+    id: {
+      pt: "“Bulan” também quer dizer lua.",
+      en: "“Bulan” also means moon.",
+    },
+    pt: { id: "Dalam bahasa Portugis, bulan (waktu) adalah “mês” dan bulan di langit adalah “lua”." },
   }),
   v("year", "days", "ano", "year", "tahun"),
   v("january", "days", "janeiro", "January", "Januari"),
@@ -292,9 +332,11 @@ export const VOCAB: VocabItem[] = [
   v("to-know", "verbs", "saber", "to know", "tahu"),
   v("to-like", "verbs", "gostar", "to like", "suka"),
   v("to-speak", "verbs", "falar", "to speak", "berbicara", {
-    pt: "No dia a dia se fala “ngomong”.",
-    en: "In casual speech people say “ngomong”.",
-    id: "Di Portugis, “falar” dipakai di semua situasi.",
+    id: {
+      pt: "Falando, o prefixo cai e fica “bicara”. No dia a dia também se usa outra palavra, “ngomong”.",
+      en: "In speech the prefix drops: “bicara”. Casually people also use a different word, “ngomong”.",
+    },
+    pt: { id: "Dalam bahasa Portugis, “falar” dipakai di semua situasi, resmi maupun santai." },
   }),
   v("to-read", "verbs", "ler", "to read", "membaca"),
   v("to-write", "verbs", "escrever", "to write", "menulis"),
@@ -311,14 +353,16 @@ export const VOCAB: VocabItem[] = [
   v("small", "adjectives", "pequeno", "small", "kecil"),
   v("new", "adjectives", "novo", "new", "baru"),
   v("old-thing", "adjectives", "velho (coisa)", "old (thing)", "lama", {
-    pt: "Pra pessoas idosas se diz “tua”.",
-    en: "For elderly people, say “tua”.",
-    id: "Di Portugis, “velho” dipakai untuk barang maupun orang.",
+    id: {
+      pt: "Pra pessoas idosas se diz “tua”.",
+      en: "For elderly people, say “tua”.",
+    },
+    pt: { id: "Dalam bahasa Portugis, “velho” dipakai untuk barang maupun orang." },
   }),
   v("good", "adjectives", "bom", "good", "bagus"),
   v("bad", "adjectives", "ruim", "bad", "jelek"),
   v("fast", "adjectives", "rápido", "fast", "cepat"),
-  v("slow", "adjectives", "devagar", "slow", "lambat"),
+  v("slow", "adjectives", "lento", "slow", "lambat"),
   v("easy", "adjectives", "fácil", "easy", "mudah"),
   v("difficult", "adjectives", "difícil", "difficult", "sulit"),
   v("many", "adjectives", "muitos", "many", "banyak"),
@@ -339,9 +383,11 @@ export const VOCAB: VocabItem[] = [
   v("storm", "weather", "tempestade", "storm", "badai"),
 
   v("phone", "home", "celular", "phone", "ponsel", {
-    pt: "No dia a dia todo mundo fala “HP” (lê-se “ha-pe”).",
-    en: "In everyday speech everyone says “HP” (said “ha-pay”).",
-    id: "Di Brasil, HP disebut “celular”.",
+    id: {
+      pt: "No dia a dia todo mundo fala “HP” (lê-se “ha-pe”).",
+      en: "In everyday speech everyone says “HP” (said “ha-pay”).",
+    },
+    pt: { id: "Di Brasil, HP disebut “celular”." },
   }),
   v("door", "home", "porta", "door", "pintu"),
   v("window", "home", "janela", "window", "jendela"),
@@ -360,9 +406,11 @@ export const VOCAB: VocabItem[] = [
   v("eye", "body", "olho", "eye", "mata"),
   v("hand", "body", "mão", "hand", "tangan"),
   v("foot", "body", "pé", "foot", "kaki", {
-    pt: "“Kaki” serve pra pé e pra perna.",
-    en: "“Kaki” means both foot and leg.",
-    id: "Di Portugis, telapak kaki adalah “pé” dan tungkai adalah “perna”.",
+    id: {
+      pt: "“Kaki” serve pra pé e pra perna.",
+      en: "“Kaki” means both foot and leg.",
+    },
+    pt: { id: "Dalam bahasa Portugis, telapak kaki adalah “pé” dan tungkai adalah “perna”." },
   }),
   v("mouth", "body", "boca", "mouth", "mulut"),
   v("hair", "body", "cabelo", "hair", "rambut"),

@@ -9,7 +9,7 @@ import { couple } from "@/data/couple"
 import { SENTENCES, type Sentence } from "@/data/sentences"
 import type { Lang, PersonId } from "@/data/types"
 import { introFor } from "@/data/units"
-import { TOPICS, type Topic, type VocabItem } from "@/data/vocab"
+import { noteFor, TOPICS, type Topic, type VocabItem } from "@/data/vocab"
 import { translate } from "@/lib/i18n"
 import { finishLesson, isBuildCorrect, recordAnswer, sentenceUses, XP_PER_ANSWER, type Question } from "@/lib/learn"
 import { sendToque, topicFor } from "@/lib/ntfy"
@@ -312,7 +312,7 @@ function Feedback({
       : question.kind === "meaning"
         ? question.item.text[base]
         : question.item.text[target]
-  const note = question.kind !== "build" ? question.item.note?.[base] : undefined
+  const note = question.kind !== "build" ? noteFor(question.item, target, base) : undefined
   const meaning =
     question.kind === "build" ? null : question.kind === "meaning" ? question.item.text[target] : question.item.text[base]
 
@@ -469,6 +469,7 @@ function WordCard({
 }) {
   const { t } = usePrefs()
   const example = exampleFor(item, target)
+  const note = noteFor(item, target, base)
 
   React.useEffect(() => {
     speak(item.text[target], target)
@@ -488,7 +489,7 @@ function WordCard({
           {item.text[base]}
         </p>
       </div>
-      {item.note?.[base] && <p className="rounded-2xl bg-muted px-4 py-3 text-base">{item.note[base]}</p>}
+      {note && <p className="rounded-2xl bg-muted px-4 py-3 text-base">{note}</p>}
       {example && (
         <div className="flex flex-col gap-1">
           <p className="text-sm text-muted-foreground">{t("example")}</p>

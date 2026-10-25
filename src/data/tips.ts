@@ -54,9 +54,9 @@ export const TIPS: Tip[] = [
     target: "id",
     title: { pt: "Falado x escrito", en: "Spoken vs written", id: "Bahasa lisan dan tulisan" },
     body: {
-      pt: "No dia a dia as palavras encurtam: tidak vira nggak, sedang vira lagi, membeli vira beli, berbicara vira ngomong. Com a Gabriela, use o jeito falado.",
-      en: "In everyday speech words get shorter: tidak becomes nggak, sedang becomes lagi, membeli becomes beli, berbicara becomes ngomong.",
-      id: "Dalam percakapan sehari-hari banyak kata jadi lebih pendek: nggak, lagi, beli, ngomong.",
+      pt: "No dia a dia muita palavra muda: tidak vira nggak, sedang vira lagi, membeli vira beli, berbicara vira bicara. Pra falar também se usa outra palavra, ngomong. Com a Gabriela, use o jeito falado.",
+      en: "Everyday speech changes many words: tidak becomes nggak, sedang becomes lagi, membeli becomes beli, berbicara becomes bicara. For “to talk” people also use a different word, ngomong.",
+      id: "Dalam percakapan sehari-hari banyak kata berubah: nggak, lagi, beli, bicara. Untuk berbicara juga sering dipakai kata ngomong.",
     },
   },
   {

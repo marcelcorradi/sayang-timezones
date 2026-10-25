@@ -2,7 +2,7 @@ import * as React from "react"
 
 import type { DateKey, Lang } from "@/data/types"
 import { SENTENCES, tokensOf, type Sentence } from "@/data/sentences"
-import { VOCAB, type Topic, type VocabItem } from "@/data/vocab"
+import { CONFUSABLE, VOCAB, type Topic, type VocabItem } from "@/data/vocab"
 import { daysBetween } from "@/lib/time"
 
 /**
@@ -83,10 +83,16 @@ export function setTarget(base: Lang, target: Lang) {
   setStore({ ...s, target: { ...s.target, [base]: target } })
 }
 
+/** Acerto só sobe de caixa quando a palavra é nova ou já venceu: acertar de novo no mesmo dia não conta. */
 export function recordAnswer(target: Lang, key: string, correct: boolean, today: number) {
   const s = getStore()
   const p = progressOf(s, target)
-  const box = correct ? Math.min((p.items[key]?.box ?? 0) + 1, BOX_DAYS.length - 1) : 0
+  const current = p.items[key]
+  if (correct && current && current.due > today) {
+    setStore({ ...s, progress: { ...s.progress, [target]: { ...p, xp: p.xp + XP_PER_ANSWER } } })
+    return
+  }
+  const box = correct ? Math.min((current?.box ?? 0) + 1, BOX_DAYS.length - 1) : 0
   const items = { ...p.items, [key]: { box, due: today + BOX_DAYS[box] } }
   setStore({ ...s, progress: { ...s.progress, [target]: { ...p, items, xp: p.xp + (correct ? XP_PER_ANSWER : 0) } } })
 }
@@ -128,24 +134,32 @@ const shuffle = <T,>(list: T[]) => {
 
 const same = (a: string, b: string) => a.toLocaleLowerCase() === b.toLocaleLowerCase()
 
+const confusable = (a: string, b: string) => CONFUSABLE.some((group) => group.includes(a) && group.includes(b))
+
 /**
- * Três alternativas erradas, sem repetir o texto da certa em nenhum dos dois idiomas.
+ * Três alternativas erradas, sem repetir o texto da certa em nenhum dos dois idiomas
+ * nem trazer uma palavra que também serviria de tradução (CONFUSABLE).
  * Primeiro as outras palavras da própria lição (que a pessoa acabou de ver), depois o mesmo tema.
  */
 function optionsFor(item: VocabItem, target: Lang, base: Lang, lesson: VocabItem[]) {
   const clash = (other: VocabItem) =>
-    other.key === item.key || same(other.text[target], item.text[target]) || same(other.text[base], item.text[base])
+    other.key === item.key ||
+    confusable(other.key, item.key) ||
+    same(other.text[target], item.text[target]) ||
+    same(other.text[base], item.text[base])
   const fromLesson = shuffle(lesson.filter((o) => !clash(o)))
   const sameTopic = shuffle(VOCAB.filter((o) => o.topic === item.topic && !clash(o) && !lesson.includes(o)))
   const others = shuffle(VOCAB.filter((o) => o.topic !== item.topic && !clash(o)))
   return shuffle([item, ...[...fromLesson, ...sameTopic, ...others].slice(0, 3)])
 }
 
-/** Se a frase usa a palavra (a primeira forma, quando há variantes como "obrigado, obrigada"). */
+/** Se a frase usa a palavra, em qualquer uma das formas quando há variantes como "amigo, amiga". */
 export function sentenceUses(sentence: Sentence, item: VocabItem, target: Lang) {
-  const words = tokensOf(item.text[target].split(",")[0]).map((w) => w.toLocaleLowerCase())
   const tokens = tokensOf(sentence.text[target]).map((w) => w.toLocaleLowerCase())
-  return words.length > 0 && tokens.some((_, i) => words.every((w, j) => tokens[i + j] === w))
+  return item.text[target].split(",").some((form) => {
+    const words = tokensOf(form).map((w) => w.toLocaleLowerCase())
+    return words.length > 0 && tokens.some((_, i) => words.every((w, j) => tokens[i + j] === w))
+  })
 }
 
 /** Peças sem a maiúscula do começo da frase, que entregaria qual palavra vem primeiro (nomes e o "I" ficam). */
@@ -164,25 +178,38 @@ function tilesFor(sentence: Sentence, target: Lang) {
   return shuffle([...tokens, ...distractors])
 }
 
+/** Vale a frase principal ou qualquer outra ordem certa em `alt`. */
 export function isBuildCorrect(sentence: Sentence, target: Lang, answer: string[]) {
-  const expected = tokensOf(sentence.text[target])
-  return answer.length === expected.length && answer.every((w, i) => same(w, expected[i]))
+  return [sentence.text[target], ...(sentence.alt?.[target] ?? [])].some((text) => {
+    const expected = tokensOf(text)
+    return answer.length === expected.length && answer.every((w, i) => same(w, expected[i]))
+  })
 }
 
 const LESSON_SIZE = 10
 
+/** Perguntas extras por palavra, além do "o que significa", pra uma revisão curta não repetir a mesma palavra 10 vezes. */
+const EXTRA_PER_WORD = 2
+
 /**
  * Monta uma lição: até 5 palavras (vencidas primeiro, depois novas, depois as mais fracas),
  * cada uma com "o que significa" primeiro; até 2 frases pra montar, só das que usam
- * uma dessas palavras; o resto alterna entre "como se diz" e "o que você ouviu".
+ * uma dessas palavras (as da unidade `topic` primeiro); o resto alterna entre "como se diz" e "o que você ouviu".
  * Tudo gira em torno das palavras da lição, que são as mesmas apresentadas nos cartões.
+ * Na revisão (`review`), as frases recebidas já foram vistas e entram mesmo sem palavra vencida.
  */
 export function buildLesson(
   pool: VocabItem[],
   sentences: Sentence[],
   p: LangProgress,
   today: number,
-  { target, base, canListen }: { target: Lang; base: Lang; canListen: boolean }
+  {
+    target,
+    base,
+    canListen,
+    topic,
+    review = false,
+  }: { target: Lang; base: Lang; canListen: boolean; topic?: Topic; review?: boolean }
 ): Question[] {
   const rank = (key: string) => {
     const progress = p.items[key]
@@ -193,8 +220,9 @@ export function buildLesson(
   const focus = shuffle(pool)
     .sort((a, b) => rank(a.key) - rank(b.key))
     .slice(0, 5)
-  const builds = shuffle(sentences.filter((s) => focus.some((item) => sentenceUses(s, item, target))))
-    .sort((a, b) => rank(a.key) - rank(b.key))
+  const outside = (s: Sentence) => Number(topic !== undefined && s.topic !== topic)
+  const builds = shuffle(sentences.filter((s) => review || focus.some((item) => sentenceUses(s, item, target))))
+    .sort((a, b) => rank(a.key) - rank(b.key) || outside(a) - outside(b))
     .slice(0, 2)
 
   const intro: Question[] = focus.map((item) => ({
@@ -210,7 +238,7 @@ export function buildLesson(
     tiles: tilesFor(sentence, target),
   }))
   const kinds: QuestionKind[] = canListen ? ["word", "listen"] : ["word"]
-  for (let i = 0; focus.length && intro.length + rest.length < LESSON_SIZE; i++) {
+  for (let i = 0; i < focus.length * EXTRA_PER_WORD && intro.length + rest.length < LESSON_SIZE; i++) {
     const item = focus[i % focus.length]
     rest.push({ kind: kinds[i % kinds.length], key: item.key, item, options: optionsFor(item, target, base, focus) })
   }

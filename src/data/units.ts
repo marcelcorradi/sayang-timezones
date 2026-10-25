@@ -11,8 +11,8 @@ type Intro = Partial<Record<Lang, Partial<Record<Lang, string>>>>
 export const UNIT_INTROS: Record<Topic, Intro> = {
   greetings: {
     id: {
-      pt: "Em indonésio, o cumprimento muda com a hora do dia: selamat pagi (manhã), selamat siang (até umas 15h), selamat sore (fim de tarde) e selamat malam (noite). “Selamat” sozinho quer dizer algo como “que seja bom”.",
-      en: "Indonesian greetings change with the time of day: selamat pagi (morning), selamat siang (until about 3pm), selamat sore (late afternoon) and selamat malam (evening). “Selamat” on its own means something like “may it be good”.",
+      pt: "Em indonésio, o cumprimento muda com a hora do dia: selamat pagi (manhã), selamat siang (até umas 15h), selamat sore (fim de tarde) e selamat malam (noite). “Selamat” quer dizer “são e salvo”; sozinho, “selamat!” é parabéns.",
+      en: "Indonesian greetings change with the time of day: selamat pagi (morning), selamat siang (until about 3pm), selamat sore (late afternoon) and selamat malam (evening). “Selamat” means “safe and well”; on its own, “selamat!” is congratulations.",
     },
     pt: {
       id: "Salam dalam bahasa Portugis mengikuti waktu: bom dia (pagi), boa tarde (siang sampai sore), boa noite (malam). Di Brasil orang juga sering bilang “oi” dan “tudo bem?” untuk menyapa.",
@@ -34,7 +34,7 @@ export const UNIT_INTROS: Record<Topic, Intro> = {
     },
     en: {
       pt: "O inglês não tem gênero: friend serve pra amigo e amiga, e os adjetivos nunca mudam. “You” vale pra você e pra vocês.",
-      id: "Bahasa Inggris tidak punya jenis kata, mirip bahasa Indonesia: friend bisa laki-laki atau perempuan. “You” bisa berarti kamu atau kalian.",
+      id: "Bahasa Inggris tidak membedakan kata maskulin dan feminin, mirip bahasa Indonesia: friend bisa laki-laki atau perempuan. “You” bisa berarti kamu atau kalian.",
     },
   },
   numbers: {
@@ -43,7 +43,7 @@ export const UNIT_INTROS: Record<Topic, Intro> = {
       en: "Numbers are very regular. Learn 1 to 10 and build the rest: 11 to 19 take “belas” (dua belas = 12), tens take “puluh” (tiga puluh = 30), hundreds “ratus” and thousands “ribu”. “Se-” means one: seratus (100), seribu (1000).",
     },
     pt: {
-      id: "Angka 1 dan 2 berubah sesuai jenis kata: um/uma (satu), dois/duas (dua): dois cafés, duas casas. Angka 11 sampai 15 punya nama sendiri (onze, doze, treze, catorze, quinze), lalu 16 = dezesseis.",
+      id: "Angka 1 dan 2 berubah sesuai bendanya, maskulin atau feminin: um/uma (satu), dois/duas (dua): dois cafés, duas casas. Angka 11 sampai 15 punya nama sendiri (onze, doze, treze, catorze, quinze), lalu 16 = dezesseis.",
       en: "One and two change with gender: um/uma, dois/duas: dois cafés, duas casas. Eleven to fifteen have their own names (onze, doze, treze, catorze, quinze), then 16 is dezesseis.",
     },
     en: {
@@ -57,7 +57,7 @@ export const UNIT_INTROS: Record<Topic, Intro> = {
       en: "The color comes after the thing: baju merah (red clothes), mobil putih (white car). For light and dark shades add “muda” and “tua”: biru muda (light blue), biru tua (dark blue).",
     },
     pt: {
-      id: "Warna diletakkan setelah benda, seperti bahasa Indonesia, tapi ikut jenis katanya: camisa vermelha (baju merah), carro vermelho (mobil merah). Beberapa warna tidak berubah, seperti azul dan verde.",
+      id: "Warna diletakkan setelah benda, seperti bahasa Indonesia, tapi ikut maskulin atau feminin bendanya: camisa vermelha (baju merah), carro vermelho (mobil merah). Beberapa warna tidak berubah, seperti azul dan verde.",
       en: "Colors go after the noun and agree in gender: camisa vermelha (red shirt), carro vermelho (red car). Some don't change, like azul and verde.",
     },
     en: {
@@ -123,8 +123,8 @@ export const UNIT_INTROS: Record<Topic, Intro> = {
   },
   verbs: {
     id: {
-      pt: "Os verbos não conjugam: aku makan, kamu makan, mereka makan. Muitos têm prefixos (me-, ber-) no jeito formal e perdem o prefixo na fala: membeli vira beli, berbicara vira ngomong. Pra negar, use “tidak” ou, falando, “nggak”.",
-      en: "Verbs don't conjugate: aku makan, kamu makan, mereka makan. Many carry prefixes (me-, ber-) in formal language and drop them in speech: membeli becomes beli, berbicara becomes ngomong. To negate, use “tidak”, or “nggak” when speaking.",
+      pt: "Os verbos não conjugam: aku makan, kamu makan, mereka makan. Muitos têm prefixos (me-, ber-) no jeito formal e perdem o prefixo na fala: membeli vira beli, berbicara vira bicara (ou, bem informal, ngomong). Pra negar, use “tidak” ou, falando, “nggak”.",
+      en: "Verbs don't conjugate: aku makan, kamu makan, mereka makan. Many carry prefixes (me-, ber-) in formal language and drop them in speech: membeli becomes beli, berbicara becomes bicara (or, very casually, ngomong). To negate, use “tidak”, or “nggak” when speaking.",
     },
     pt: {
       id: "Kata kerja Portugis berubah sesuai pelaku: eu falo, você fala, nós falamos, eles falam. Bentuk dasarnya berakhiran -ar, -er, atau -ir: falar, comer, partir. Untuk menyangkal, taruh “não” di depan: eu não sei (aku nggak tahu).",
