@@ -2,7 +2,8 @@ import * as React from "react"
 
 import type { PersonId } from "@/data/types"
 
-import { decryptDoc, emptyDoc, encryptDoc, fromBase64, toBase64, WrongPassphraseError } from "./crypto"
+import { decryptDoc, emptyDoc, encryptDoc, toBase64, WrongPassphraseError } from "./crypto"
+import { parseSetupLink, type Creds } from "./link"
 import { githubStorage, localStorageBackend, StorageError, type StorageErrorCode, type VaultStorage } from "./storage"
 import type { VaultDoc, VaultFile } from "./types"
 
@@ -10,10 +11,8 @@ const CREDS_KEY = "sayang:vault"
 const POLL = 60_000
 const useLocal = import.meta.env.VITE_VAULT_LOCAL === "1"
 
-export interface Creds {
-  token: string
-  passphrase: string
-}
+export type { Creds }
+export { parseSetupLink }
 
 export type VaultError = StorageErrorCode | "wrong-pass" | "missing"
 
@@ -41,16 +40,10 @@ function storageFor(creds: Creds): VaultStorage {
 }
 
 function readCreds(): Creds | null {
-  // Link de configuração: ...#vault=<base64 de {t, p}>. O que vem depois do # nunca sai do aparelho.
-  const match = window.location.hash.match(/vault=([^&]+)/)
-  if (match) {
-    try {
-      const { t, p } = JSON.parse(new TextDecoder().decode(fromBase64(decodeURIComponent(match[1]))))
-      window.history.replaceState(null, "", window.location.pathname + window.location.search)
-      return { token: t, passphrase: p }
-    } catch {
-      // Link quebrado: segue com o que já estiver salvo.
-    }
+  const fromLink = parseSetupLink(window.location.hash)
+  if (fromLink) {
+    window.history.replaceState(null, "", window.location.pathname + window.location.search)
+    return fromLink
   }
   try {
     return JSON.parse(localStorage.getItem(CREDS_KEY) ?? "null")

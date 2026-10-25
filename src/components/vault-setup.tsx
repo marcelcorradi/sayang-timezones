@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import type { TranslationKey } from "@/lib/i18n"
 import { usePrefs } from "@/lib/prefs"
-import { useVault, type VaultError } from "@/lib/vault/vault"
+import { parseSetupLink, useVault, type VaultError } from "@/lib/vault/vault"
 
 const ERRORS: Record<Exclude<VaultError, "missing">, TranslationKey> = {
   "bad-token": "vaultErrBadToken",
@@ -49,9 +49,9 @@ function VaultForm({ onDone }: { onDone: () => void }) {
   const [error, setError] = React.useState<VaultError | null>(null)
   const [busy, setBusy] = React.useState(false)
 
-  const submit = async (create: boolean) => {
+  const submit = async (create: boolean, creds = { token: token.trim(), passphrase }) => {
     setBusy(true)
-    const result = await connect({ token: token.trim(), passphrase }, { create })
+    const result = await connect(creds, { create })
     setBusy(false)
     setError(result)
     if (!result) onDone()
@@ -73,7 +73,17 @@ function VaultForm({ onDone }: { onDone: () => void }) {
             type="password"
             autoComplete="off"
             value={token}
-            onChange={(e) => setToken(e.target.value)}
+            onChange={(e) => {
+              // Colou o link de configuração inteiro: já tem chave e senha, então conecta direto.
+              const fromLink = parseSetupLink(e.target.value)
+              if (fromLink) {
+                setToken(fromLink.token)
+                setPassphrase(fromLink.passphrase)
+                submit(false, fromLink)
+              } else {
+                setToken(e.target.value)
+              }
+            }}
             aria-invalid={error === "bad-token" || error === "forbidden" || undefined}
             required
           />
