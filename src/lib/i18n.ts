@@ -206,6 +206,15 @@ const pt = {
   back: "Voltar",
   anotherWord: "Outra palavra",
 
+  introNew: "{n} palavras novas nesta lição",
+  introOneNew: "1 palavra nova nesta lição",
+  introPractice: "Nesta lição você pratica o que já viu",
+  seeWords: "Ver as palavras",
+  practice: "Praticar",
+  newWord: "Palavra nova {n} de {total}",
+  example: "Exemplo",
+  nextWord: "Próxima",
+
   hoursShort: "{h}h",
   minutesShort: "{m}min",
 }
@@ -418,6 +427,15 @@ const en: Dict = {
   back: "Back",
   anotherWord: "Another word",
 
+  introNew: "{n} new words in this lesson",
+  introOneNew: "1 new word in this lesson",
+  introPractice: "This lesson practices what you've already seen",
+  seeWords: "See the words",
+  practice: "Practice",
+  newWord: "New word {n} of {total}",
+  example: "Example",
+  nextWord: "Next",
+
   hoursShort: "{h}h",
   minutesShort: "{m}m",
 }
@@ -627,6 +645,15 @@ const id: Dict = {
   msgLearned: "{name} baru aja latihan bahasa {lang} di Sayang 📚",
   back: "Kembali",
   anotherWord: "Kata lain",
+
+  introNew: "{n} kata baru di pelajaran ini",
+  introOneNew: "1 kata baru di pelajaran ini",
+  introPractice: "Pelajaran ini melatih yang sudah kamu pelajari",
+  seeWords: "Lihat kata-katanya",
+  practice: "Latihan",
+  newWord: "Kata baru {n} dari {total}",
+  example: "Contoh",
+  nextWord: "Berikutnya",
 
   hoursShort: "{h} jam",
   minutesShort: "{m} mnt",

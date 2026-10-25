@@ -11,7 +11,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { couple } from "@/data/couple"
 import { TIPS } from "@/data/tips"
 import type { Lang, PersonId } from "@/data/types"
-import { TOPICS, VOCAB, type Topic } from "@/data/vocab"
+import { TOPICS, VOCAB, type Topic, type VocabItem } from "@/data/vocab"
 import {
   buildLesson,
   currentStreak,
@@ -37,7 +37,10 @@ const LANGS: Lang[] = ["id", "pt", "en"]
 export function LearnView({ me, now }: { me: PersonId; now: number }) {
   const { lang: base, t } = usePrefs()
   const store = useLearnStore()
-  const [lesson, setLesson] = React.useState<Question[] | null>(null)
+  const [lesson, setLesson] = React.useState<{
+    questions: Question[]
+    intro?: { topic: Topic; newItems: VocabItem[] }
+  } | null>(null)
 
   const targets = LANGS.filter((l) => l !== base)
   const partnerLang = couple.people[partnerOf(me)].defaultLang
@@ -53,11 +56,16 @@ export function LearnView({ me, now }: { me: PersonId; now: number }) {
 
   const start = (topic: Topic | "review") => {
     const options = { target, base, canListen: hasVoice(target) }
-    const questions =
-      topic === "review"
-        ? buildLesson(dueItems(progress, today), dueSentences(progress, today), progress, today, options)
-        : buildLesson(itemsOf(topic), sentencesOf(topic), progress, today, options)
-    if (questions.length) setLesson(questions)
+    if (topic === "review") {
+      const questions = buildLesson(dueItems(progress, today), dueSentences(progress, today), progress, today, options)
+      if (questions.length) setLesson({ questions })
+      return
+    }
+    const questions = buildLesson(itemsOf(topic), sentencesOf(topic), progress, today, options)
+    // Palavras que a pessoa nunca viu ganham um cartão de apresentação antes das perguntas.
+    const newItems = new Map<string, VocabItem>()
+    for (const q of questions) if (q.kind !== "build" && !progress.items[q.key]) newItems.set(q.key, q.item)
+    setLesson({ questions, intro: { topic, newItems: [...newItems.values()] } })
   }
 
   return (
@@ -144,7 +152,15 @@ export function LearnView({ me, now }: { me: PersonId; now: number }) {
       <Tips target={target} />
 
       {lesson && (
-        <Lesson questions={lesson} target={target} base={base} me={me} today={today} onClose={() => setLesson(null)} />
+        <Lesson
+          questions={lesson.questions}
+          intro={lesson.intro}
+          target={target}
+          base={base}
+          me={me}
+          today={today}
+          onClose={() => setLesson(null)}
+        />
       )}
     </div>
   )

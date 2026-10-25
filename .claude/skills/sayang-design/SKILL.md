@@ -75,6 +75,7 @@ Toda frase visível existe em **português, inglês e indonésio**, em `src/lib/
   - `src/data/vocab.ts`: unidades em `TOPICS` e palavras em `VOCAB`, sempre com pt/en/id;
   - `src/data/sentences.ts`: frases para montar, curtas e ligadas a uma unidade;
   - `src/data/tips.ts`: dicas de gramática por idioma aprendido;
+  - `src/data/units.ts`: a explicação que abre cada unidade, por idioma aprendido e escrita no idioma de quem lê (uma lição de unidade é: explicação, palavras novas uma por vez, perguntas);
   - `src/lib/learn.ts`: repetição espaçada, XP e sequência, salvos no localStorage do aparelho;
   - `src/lib/speech.ts`: pronúncia pela voz do celular.
   Ao acrescentar conteúdo, confira as traduções com cuidado. O indonésio do casal é o falado (nggak, lagi, kangen), mas o vocabulário-base usa a forma padrão, com o jeito falado nas notas.

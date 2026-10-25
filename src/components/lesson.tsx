@@ -6,7 +6,10 @@ import { cn } from "cn"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { couple } from "@/data/couple"
+import { SENTENCES, tokensOf, type Sentence } from "@/data/sentences"
 import type { Lang, PersonId } from "@/data/types"
+import { introFor } from "@/data/units"
+import { TOPICS, type Topic, type VocabItem } from "@/data/vocab"
 import { translate } from "@/lib/i18n"
 import { finishLesson, isBuildCorrect, recordAnswer, XP_PER_ANSWER, type Question } from "@/lib/learn"
 import { sendToque, topicFor } from "@/lib/ntfy"
@@ -17,6 +20,8 @@ import { useVault } from "@/lib/vault/vault"
 
 interface LessonProps {
   questions: Question[]
+  /** Lição de unidade: abre com a explicação e as palavras novas antes das perguntas. */
+  intro?: { topic: Topic; newItems: VocabItem[] }
   target: Lang
   base: Lang
   me: PersonId
@@ -24,9 +29,14 @@ interface LessonProps {
   onClose: () => void
 }
 
-/** Lição em tela cheia: uma pergunta por vez, resposta conferida na hora. */
-export function Lesson({ questions, target, base, me, today, onClose }: LessonProps) {
+/**
+ * Lição em tela cheia, no jeito do Busuu: primeiro a explicação da unidade, depois as palavras
+ * novas uma por vez, e só então as perguntas, conferidas na hora.
+ */
+export function Lesson({ questions, intro, target, base, me, today, onClose }: LessonProps) {
   const { t } = usePrefs()
+  const [phase, setPhase] = React.useState<"intro" | "cards" | "quiz">(intro ? "intro" : "quiz")
+  const [card, setCard] = React.useState(0)
   const [index, setIndex] = React.useState(0)
   const [result, setResult] = React.useState<boolean | null>(null)
   const [score, setScore] = React.useState(0)
@@ -43,6 +53,11 @@ export function Lesson({ questions, target, base, me, today, onClose }: LessonPr
     speak(question.kind === "build" ? question.sentence.text[target] : question.item.text[target], target)
   }
 
+  // A barra conta tudo: explicação, palavras novas e perguntas.
+  const before = intro ? 1 + intro.newItems.length : 0
+  const position = phase === "intro" ? 0 : phase === "cards" ? 1 + card : before + Math.min(index, questions.length)
+  const progress = (position / (before + questions.length)) * 100
+
   const next = () => {
     setResult(null)
     if (index + 1 >= questions.length) finishLesson(target, today)
@@ -56,10 +71,28 @@ export function Lesson({ questions, target, base, me, today, onClose }: LessonPr
           <Button variant="ghost" size="icon" aria-label={t("closeLesson")} onClick={onClose}>
             <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
           </Button>
-          <Progress value={(Math.min(index, questions.length) / questions.length) * 100} className="flex-1" />
+          <Progress value={progress} className="flex-1" />
         </div>
 
-        {done ? (
+        {phase === "intro" && intro ? (
+          <UnitIntro
+            topic={intro.topic}
+            newCount={intro.newItems.length}
+            target={target}
+            base={base}
+            onNext={() => setPhase(intro.newItems.length ? "cards" : "quiz")}
+          />
+        ) : phase === "cards" && intro ? (
+          <WordCard
+            key={card}
+            item={intro.newItems[card]}
+            position={card + 1}
+            total={intro.newItems.length}
+            target={target}
+            base={base}
+            onNext={() => (card + 1 < intro.newItems.length ? setCard(card + 1) : setPhase("quiz"))}
+          />
+        ) : done ? (
           <Finished score={score} total={questions.length} target={target} me={me} onClose={onClose} />
         ) : (
           <>
@@ -375,6 +408,111 @@ export function ListenButton({ text, lang }: { text: string; lang: Lang }) {
     <Button variant="ghost" size="icon" aria-label={t("listen")} onClick={() => speak(text, lang)}>
       <HugeiconsIcon icon={VolumeHighIcon} strokeWidth={2} />
     </Button>
+  )
+}
+
+function UnitIntro({
+  topic,
+  newCount,
+  target,
+  base,
+  onNext,
+}: {
+  topic: Topic
+  newCount: number
+  target: Lang
+  base: Lang
+  onNext: () => void
+}) {
+  const { t } = usePrefs()
+  const unit = TOPICS.find((u) => u.id === topic)
+  const text = introFor(topic, target, base)
+
+  return (
+    <div className="flex flex-1 flex-col gap-6 py-8">
+      <div className="flex flex-col gap-3">
+        <span className="text-5xl" aria-hidden>
+          {unit?.emoji}
+        </span>
+        <h2 className="font-heading text-3xl font-semibold tracking-tight">{unit?.title[base]}</h2>
+      </div>
+      {text && <p className="text-lg leading-relaxed">{text}</p>}
+      <p className="text-sm text-muted-foreground">
+        {newCount === 0 ? t("introPractice") : newCount === 1 ? t("introOneNew") : t("introNew", { n: newCount })}
+      </p>
+      <Button size="lg" className="mt-auto" onClick={onNext}>
+        {newCount ? t("seeWords") : t("practice")}
+      </Button>
+    </div>
+  )
+}
+
+/** Uma frase das lições que use a palavra, para mostrar como exemplo. */
+function exampleFor(item: VocabItem, target: Lang): Sentence | undefined {
+  const words = tokensOf(item.text[target].split(",")[0]).map((w) => w.toLocaleLowerCase())
+  if (!words.length) return undefined
+  return SENTENCES.find((sentence) => {
+    const tokens = tokensOf(sentence.text[target]).map((w) => w.toLocaleLowerCase())
+    return tokens.some((_, i) => words.every((w, j) => tokens[i + j] === w))
+  })
+}
+
+/** Apresenta uma palavra nova: grande, falada, com tradução, observação e um exemplo quando houver. */
+function WordCard({
+  item,
+  position,
+  total,
+  target,
+  base,
+  onNext,
+}: {
+  item: VocabItem
+  position: number
+  total: number
+  target: Lang
+  base: Lang
+  onNext: () => void
+}) {
+  const { t } = usePrefs()
+  const example = exampleFor(item, target)
+
+  React.useEffect(() => {
+    speak(item.text[target], target)
+  }, [item, target])
+
+  return (
+    <div className="flex flex-1 flex-col gap-6 py-8">
+      <p className="text-sm text-muted-foreground">{t("newWord", { n: position, total })}</p>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
+          <p lang={target} className="font-heading text-4xl leading-tight font-semibold tracking-tight">
+            {item.text[target]}
+          </p>
+          <ListenButton text={item.text[target]} lang={target} />
+        </div>
+        <p lang={base} className="text-xl text-muted-foreground">
+          {item.text[base]}
+        </p>
+      </div>
+      {item.note?.[base] && <p className="rounded-2xl bg-muted px-4 py-3 text-base">{item.note[base]}</p>}
+      {example && (
+        <div className="flex flex-col gap-1">
+          <p className="text-sm text-muted-foreground">{t("example")}</p>
+          <div className="flex items-center gap-2">
+            <p lang={target} className="text-lg font-medium">
+              {example.text[target]}
+            </p>
+            <ListenButton text={example.text[target]} lang={target} />
+          </div>
+          <p lang={base} className="text-muted-foreground">
+            {example.text[base]}
+          </p>
+        </div>
+      )}
+      <Button size="lg" className="mt-auto" onClick={onNext}>
+        {position < total ? t("nextWord") : t("practice")}
+      </Button>
+    </div>
   )
 }
 
