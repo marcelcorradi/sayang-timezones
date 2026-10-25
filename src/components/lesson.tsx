@@ -6,12 +6,12 @@ import { cn } from "cn"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { couple } from "@/data/couple"
-import { SENTENCES, tokensOf, type Sentence } from "@/data/sentences"
+import { SENTENCES, type Sentence } from "@/data/sentences"
 import type { Lang, PersonId } from "@/data/types"
 import { introFor } from "@/data/units"
 import { TOPICS, type Topic, type VocabItem } from "@/data/vocab"
 import { translate } from "@/lib/i18n"
-import { finishLesson, isBuildCorrect, recordAnswer, XP_PER_ANSWER, type Question } from "@/lib/learn"
+import { finishLesson, isBuildCorrect, recordAnswer, sentenceUses, XP_PER_ANSWER, type Question } from "@/lib/learn"
 import { sendToque, topicFor } from "@/lib/ntfy"
 import { usePrefs } from "@/lib/prefs"
 import { partnerOf } from "@/lib/schedule"
@@ -448,14 +448,8 @@ function UnitIntro({
 }
 
 /** Uma frase das lições que use a palavra, para mostrar como exemplo. */
-function exampleFor(item: VocabItem, target: Lang): Sentence | undefined {
-  const words = tokensOf(item.text[target].split(",")[0]).map((w) => w.toLocaleLowerCase())
-  if (!words.length) return undefined
-  return SENTENCES.find((sentence) => {
-    const tokens = tokensOf(sentence.text[target]).map((w) => w.toLocaleLowerCase())
-    return tokens.some((_, i) => words.every((w, j) => tokens[i + j] === w))
-  })
-}
+const exampleFor = (item: VocabItem, target: Lang): Sentence | undefined =>
+  SENTENCES.find((sentence) => sentenceUses(sentence, item, target))
 
 /** Apresenta uma palavra nova: grande, falada, com tradução, observação e um exemplo quando houver. */
 function WordCard({

@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "check": "tsx scripts/check-schedule.ts",
-    "icons": "pwa-assets-generator"
+    "icons": "pwa-assets-generator",
+    "check:lessons": "tsx scripts/check-lessons.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

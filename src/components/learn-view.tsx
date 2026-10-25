@@ -62,9 +62,10 @@ export function LearnView({ me, now }: { me: PersonId; now: number }) {
       return
     }
     const questions = buildLesson(itemsOf(topic), sentencesOf(topic), progress, today, options)
-    // Palavras que a pessoa nunca viu ganham um cartão de apresentação antes das perguntas.
+    // Toda palavra da lição que ainda não foi aprendida ganha um cartão antes das perguntas,
+    // pra nenhuma pergunta cair numa palavra que não foi apresentada.
     const newItems = new Map<string, VocabItem>()
-    for (const q of questions) if (q.kind !== "build" && !progress.items[q.key]) newItems.set(q.key, q.item)
+    for (const q of questions) if (q.kind !== "build" && !isLearned(progress, q.key)) newItems.set(q.key, q.item)
     setLesson({ questions, intro: { topic, newItems: [...newItems.values()] } })
   }
 

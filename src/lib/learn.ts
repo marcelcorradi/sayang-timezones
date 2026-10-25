@@ -128,13 +128,24 @@ const shuffle = <T,>(list: T[]) => {
 
 const same = (a: string, b: string) => a.toLocaleLowerCase() === b.toLocaleLowerCase()
 
-/** Três alternativas erradas, do mesmo tema quando dá, sem repetir o texto da certa em nenhum dos dois idiomas. */
-function optionsFor(item: VocabItem, target: Lang, base: Lang) {
+/**
+ * Três alternativas erradas, sem repetir o texto da certa em nenhum dos dois idiomas.
+ * Primeiro as outras palavras da própria lição (que a pessoa acabou de ver), depois o mesmo tema.
+ */
+function optionsFor(item: VocabItem, target: Lang, base: Lang, lesson: VocabItem[]) {
   const clash = (other: VocabItem) =>
     other.key === item.key || same(other.text[target], item.text[target]) || same(other.text[base], item.text[base])
-  const sameTopic = shuffle(VOCAB.filter((o) => o.topic === item.topic && !clash(o)))
+  const fromLesson = shuffle(lesson.filter((o) => !clash(o)))
+  const sameTopic = shuffle(VOCAB.filter((o) => o.topic === item.topic && !clash(o) && !lesson.includes(o)))
   const others = shuffle(VOCAB.filter((o) => o.topic !== item.topic && !clash(o)))
-  return shuffle([item, ...[...sameTopic, ...others].slice(0, 3)])
+  return shuffle([item, ...[...fromLesson, ...sameTopic, ...others].slice(0, 3)])
+}
+
+/** Se a frase usa a palavra (a primeira forma, quando há variantes como "obrigado, obrigada"). */
+export function sentenceUses(sentence: Sentence, item: VocabItem, target: Lang) {
+  const words = tokensOf(item.text[target].split(",")[0]).map((w) => w.toLocaleLowerCase())
+  const tokens = tokensOf(sentence.text[target]).map((w) => w.toLocaleLowerCase())
+  return words.length > 0 && tokens.some((_, i) => words.every((w, j) => tokens[i + j] === w))
 }
 
 /** Peças sem a maiúscula do começo da frase, que entregaria qual palavra vem primeiro (nomes e o "I" ficam). */
@@ -162,8 +173,9 @@ const LESSON_SIZE = 10
 
 /**
  * Monta uma lição: até 5 palavras (vencidas primeiro, depois novas, depois as mais fracas),
- * cada uma com "o que significa" primeiro; até 2 frases pra montar; o resto alterna
- * entre "como se diz" e "o que você ouviu".
+ * cada uma com "o que significa" primeiro; até 2 frases pra montar, só das que usam
+ * uma dessas palavras; o resto alterna entre "como se diz" e "o que você ouviu".
+ * Tudo gira em torno das palavras da lição, que são as mesmas apresentadas nos cartões.
  */
 export function buildLesson(
   pool: VocabItem[],
@@ -181,7 +193,7 @@ export function buildLesson(
   const focus = shuffle(pool)
     .sort((a, b) => rank(a.key) - rank(b.key))
     .slice(0, 5)
-  const builds = shuffle(sentences)
+  const builds = shuffle(sentences.filter((s) => focus.some((item) => sentenceUses(s, item, target))))
     .sort((a, b) => rank(a.key) - rank(b.key))
     .slice(0, 2)
 
@@ -189,7 +201,7 @@ export function buildLesson(
     kind: "meaning",
     key: item.key,
     item,
-    options: optionsFor(item, target, base),
+    options: optionsFor(item, target, base, focus),
   }))
   const rest: Question[] = builds.map((sentence) => ({
     kind: "build",
@@ -200,13 +212,17 @@ export function buildLesson(
   const kinds: QuestionKind[] = canListen ? ["word", "listen"] : ["word"]
   for (let i = 0; focus.length && intro.length + rest.length < LESSON_SIZE; i++) {
     const item = focus[i % focus.length]
-    rest.push({ kind: kinds[i % kinds.length], key: item.key, item, options: optionsFor(item, target, base) })
+    rest.push({ kind: kinds[i % kinds.length], key: item.key, item, options: optionsFor(item, target, base, focus) })
   }
   return [...intro, ...shuffle(rest)]
 }
 
 export const itemsOf = (topic: Topic) => VOCAB.filter((item) => item.topic === topic)
-export const sentencesOf = (topic: Topic) => SENTENCES.filter((sentence) => sentence.topic === topic)
+/** Frases da unidade primeiro; as de outras unidades entram se usarem alguma palavra da lição. */
+export const sentencesOf = (topic: Topic) => [
+  ...SENTENCES.filter((sentence) => sentence.topic === topic),
+  ...SENTENCES.filter((sentence) => sentence.topic !== topic),
+]
 export const dueSentences = (p: LangProgress, today: number) => SENTENCES.filter((s) => isDue(p, s.key, today))
 
 /** Um índice aleatório diferente de `current` (para "outra palavra"). */
