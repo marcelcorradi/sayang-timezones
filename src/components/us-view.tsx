@@ -20,7 +20,6 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/
 import { Separator } from "@/components/ui/separator"
 import { couple } from "@/data/couple"
 import type { DateKey, Lang, PersonId } from "@/data/types"
-import { WORDS } from "@/data/words"
 import { useWeather } from "@/hooks/use-weather"
 import { usePrefs } from "@/lib/prefs"
 import { PERSON_LOOK } from "@/lib/look"
@@ -37,7 +36,6 @@ export function UsView({ me, now }: { me: PersonId; now: number }) {
       <Jar me={me} partner={partnerOf(me)} />
       <Letters me={me} partner={partnerOf(me)} now={now} />
       <MoonCard me={me} now={now} />
-      <WordOfTheDay me={me} todayKey={todayKey} />
       <WeatherCard now={now} />
       {couple.together && <Together todayKey={todayKey} />}
       <ImportantDates todayKey={todayKey} />
@@ -111,31 +109,6 @@ function Together({ todayKey }: { todayKey: DateKey }) {
       </CardHeader>
       <CardContent className="text-muted-foreground">
         {formatDateKey(couple.together, lang, { day: "numeric", month: "long", year: "numeric" })}
-      </CardContent>
-    </Card>
-  )
-}
-
-/** Quem é do Brasil aprende indonésio, quem é da Indonésia aprende português. */
-function WordOfTheDay({ me, todayKey }: { me: PersonId; todayKey: DateKey }) {
-  const { lang, t } = usePrefs()
-  const word = WORDS[((daysBetween("2026-01-01", todayKey) % WORDS.length) + WORDS.length) % WORDS.length]
-  const learnsIndonesian = couple.people[me].defaultLang !== "id"
-  const shown = learnsIndonesian ? word.ind : word.pt
-  const meaning = lang === "en" ? word.en : learnsIndonesian ? word.pt : word.ind
-  const note = word.note?.[lang]
-
-  return (
-    <Card size="sm">
-      <CardHeader>
-        <CardDescription>{t("wordTitle")}</CardDescription>
-        <CardTitle lang={learnsIndonesian ? "id" : "pt-BR"} className="font-heading text-3xl font-semibold tracking-tight">
-          {shown}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-1">
-        <p className="text-base">{meaning}</p>
-        {note && <p className="text-muted-foreground">{note}</p>}
       </CardContent>
     </Card>
   )

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Clock01Icon, FavouriteIcon, Calendar01Icon } from "@hugeicons/core-free-icons"
+import { BookOpen01Icon, Calendar01Icon, Clock01Icon, FavouriteIcon } from "@hugeicons/core-free-icons"
 
 import { DayView } from "@/components/day-view"
 import { InstallButton } from "@/components/install-button"
@@ -12,10 +12,14 @@ import { Logo, Welcome } from "@/components/welcome"
 import { useNow } from "@/hooks/use-now"
 import { usePrefs } from "@/lib/prefs"
 
+// O curso de idiomas é a parte mais pesada: só carrega quando a aba Aprender abre.
+const LearnView = React.lazy(() => import("@/components/learn-view").then((m) => ({ default: m.LearnView })))
+
 const TABS = [
   { value: "now", icon: Clock01Icon, label: "tabNow" },
   { value: "day", icon: Calendar01Icon, label: "tabDay" },
   { value: "us", icon: FavouriteIcon, label: "tabUs" },
+  { value: "learn", icon: BookOpen01Icon, label: "tabLearn" },
 ] as const
 
 type Tab = (typeof TABS)[number]["value"]
@@ -47,14 +51,19 @@ export function App() {
         <TabsContent value="us">
           <UsView me={me} now={now} />
         </TabsContent>
+        <TabsContent value="learn">
+          <React.Suspense fallback={null}>
+            <LearnView me={me} now={now} />
+          </React.Suspense>
+        </TabsContent>
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/90 backdrop-blur">
         <div className="mx-auto max-w-md px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <TabsList className="w-full group-data-horizontal/tabs:h-12">
+          <TabsList className="w-full group-data-horizontal/tabs:h-14">
             {TABS.map((item) => (
-              <TabsTrigger key={item.value} value={item.value} className="gap-2 rounded-3xl">
-                <HugeiconsIcon icon={item.icon} strokeWidth={2} data-icon="inline-start" />
+              <TabsTrigger key={item.value} value={item.value} className="flex-col gap-0.5 rounded-3xl text-xs">
+                <HugeiconsIcon icon={item.icon} strokeWidth={2} />
                 {t(item.label)}
               </TabsTrigger>
             ))}

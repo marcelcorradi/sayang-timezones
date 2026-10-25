@@ -37,7 +37,7 @@ Cores por pessoa vêm de `PERSON_LOOK` (`src/lib/look.ts`). Nunca monte classes 
 
 - Mobile primeiro: 390px de largura, coluna única, `max-w-md` centralizado, `px-4`.
 - Respeite as áreas seguras do iPhone: `env(safe-area-inset-*)` no header, na barra inferior e nas sheets.
-- Navegação: três abas na barra inferior (Agora, Dia, Nós). Só crie uma quarta se a funcionalidade não couber em nenhuma das três. Ajustes ficam na sheet da engrenagem.
+- Navegação: quatro abas na barra inferior (Agora, Dia, Nós, Aprender), com ícone em cima e texto embaixo. Não crie uma quinta: encaixe a função numa das quatro. Ajustes ficam na sheet da engrenagem.
 - Movimento: só em resposta a toque, ou para o ponto pulsante de "bom momento pra ligar" (com `motion-safe:`). Nada de fade-in em cada card.
 
 ## Regras do shadcn neste projeto
@@ -70,7 +70,14 @@ Toda frase visível existe em **português, inglês e indonésio**, em `src/lib/
 ## Dados
 
 - Agenda, pessoas e datas: `src/data/couple.ts` (ver skill sayang-agenda).
-- Atividades: `src/data/activities.ts`. Palavras do dia: `src/data/words.ts`.
+- Atividades: `src/data/activities.ts`.
+- Curso de idiomas (aba Aprender):
+  - `src/data/vocab.ts`: unidades em `TOPICS` e palavras em `VOCAB`, sempre com pt/en/id;
+  - `src/data/sentences.ts`: frases para montar, curtas e ligadas a uma unidade;
+  - `src/data/tips.ts`: dicas de gramática por idioma aprendido;
+  - `src/lib/learn.ts`: repetição espaçada, XP e sequência, salvos no localStorage do aparelho;
+  - `src/lib/speech.ts`: pronúncia pela voz do celular.
+  Ao acrescentar conteúdo, confira as traduções com cuidado. O indonésio do casal é o falado (nggak, lagi, kangen), mas o vocabulário-base usa a forma padrão, com o jeito falado nas notas.
 - O site é estático (GitHub Pages), mas tem três formas de guardar ou enviar coisas entre os dois sem servidor próprio.
 
 ### Cofre (`src/lib/vault/`): o que um escreve e o outro lê

@@ -22,6 +22,7 @@ Vieram de uma pesquisa sobre apps para casais a distância (Cupla, Without, Lock
 - Céu dos painéis com o nascer e o pôr do sol reais.
 - Botão "Mandar bom dia no WhatsApp" quando o outro acabou de acordar.
 - Botão "Instalar" e ícone "dois céus" (sol e lua).
+- Aba Aprender: curso de indonésio, português e inglês com 20 unidades, 4 tipos de pergunta (o que significa, como se diz, o que ouviu, montar frase), repetição espaçada, sequência de dias, XP, dicas de gramática, palavra do dia com "outra palavra" e "Contar pro outro" pelo ntfy.
 
 ## Pausado
 
@@ -38,4 +39,5 @@ Distância entre vocês, pergunta do dia, lista do que fazer quando se encontrar
 | Feriados dos dois países | Feriados brasileiros fixos e a lista oficial indonésia do ano (SKB 3 Menteri) como `daysOff`, pela skill sayang-agenda. |
 | Status ao vivo que muda o painel | Hoje o "Tô livre" só manda um toque. Dá pra gravar um status temporário no cofre ("livre até 15:00") e o painel usar ele no lugar da rotina. |
 | Avisos automáticos ("ela acordou", "a janela começa em 15 min") | Precisa de algo rodando sem o app aberto: GitHub Actions agendado publicando no ntfy, ou um backend. |
+| Progresso do Aprender compartilhado | Hoje fica só no aparelho. Dá pra guardar no cofre e mostrar "Gabriela está há 5 dias seguidos" pro outro. |
 | Foto do dia | Precisa de armazenamento de arquivos (Firebase Storage, Supabase Storage). Fotos no repositório pesariam e ficariam visíveis se ele for público. |
