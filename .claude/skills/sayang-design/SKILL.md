@@ -76,14 +76,15 @@ Toda frase visível existe em **português, inglês e indonésio**, em `src/lib/
   - `src/data/sentences.ts`: frases para montar, curtas e ligadas a uma unidade;
   - `src/data/tips.ts`: dicas de gramática por idioma aprendido;
   - `src/data/units.ts`: a explicação que abre cada unidade, por idioma aprendido e escrita no idioma de quem lê (uma lição de unidade é: explicação, palavras novas uma por vez, perguntas);
-  - `src/lib/learn.ts`: repetição espaçada, XP e sequência, salvos no localStorage do aparelho;
+  - `src/lib/learn.ts`: repetição espaçada, XP e sequência, por pessoa, salvos no localStorage do aparelho;
+  - `src/lib/learn-sync.ts`: com o cofre conectado, junta o progresso do aparelho com `doc.learn` (vale a resposta mais recente de cada palavra) e envia ao sair de uma lição. É daí que vem a linha "Gabriela já aprendeu…". Fica fora do `learn.ts` pra o `check:lessons` rodar sem o cofre;
   - `src/lib/speech.ts`: pronúncia pela voz do celular.
   Ao acrescentar conteúdo, confira as traduções com cuidado. O indonésio do casal é o falado (nggak, lagi, kangen), mas o vocabulário-base usa a forma padrão, com o jeito falado nas notas.
 - O site é estático (GitHub Pages), mas tem três formas de guardar ou enviar coisas entre os dois sem servidor próprio.
 
 ### Cofre (`src/lib/vault/`): o que um escreve e o outro lê
 
-Motivos do pote, cartas "abra quando…" e recados de quando acordar ficam em `vault.json`, no branch `vault` deste repositório. O arquivo é criptografado com AES-GCM, usando uma chave derivada da senha do casal (PBKDF2, 310 mil iterações). O app lê e grava pela API do GitHub com uma chave pessoal (fine-grained token, Contents de leitura e escrita só neste repositório). O branch separado faz com que salvar não republique o site.
+Motivos do pote, cartas "abra quando…", recados de quando acordar e o progresso do Aprender ficam em `vault.json`, no branch `vault` deste repositório. O arquivo é criptografado com AES-GCM, usando uma chave derivada da senha do casal (PBKDF2, 310 mil iterações). O app lê e grava pela API do GitHub com uma chave pessoal (fine-grained token, Contents de leitura e escrita só neste repositório). O branch separado faz com que salvar não republique o site.
 
 - Em componentes, use `useVault()`: `doc` (o conteúdo aberto ou `null`), `update(d => { … })` (relê, aplica, criptografa e salva, e tenta de novo se os dois salvarem juntos) e `saving`.
 - Para guardar um tipo novo de coisa, adicione o campo em `VaultDoc` (`src/lib/vault/types.ts`) e trate a ausência dele em cofres antigos (`doc.novo ?? []`).

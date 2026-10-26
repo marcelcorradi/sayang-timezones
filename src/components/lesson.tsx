@@ -48,7 +48,7 @@ export function Lesson({ questions, intro, target, base, me, today, onClose }: L
     setResult(correct)
     if (correct) setScore((s) => s + 1)
     else navigator.vibrate?.(80)
-    recordAnswer(target, question.key, correct, today)
+    recordAnswer(me, target, question.key, correct, today)
     // Depois de responder, ouve a forma certa no idioma que está aprendendo.
     speak(question.kind === "build" ? question.sentence.text[target] : question.item.text[target], target)
   }
@@ -60,7 +60,7 @@ export function Lesson({ questions, intro, target, base, me, today, onClose }: L
 
   const next = () => {
     setResult(null)
-    if (index + 1 >= questions.length) finishLesson(target, today)
+    if (index + 1 >= questions.length) finishLesson(me, target, today)
     setIndex((i) => i + 1)
   }
 

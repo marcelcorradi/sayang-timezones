@@ -1,12 +1,14 @@
 import * as React from "react"
 
-import type { DateKey, Lang } from "@/data/types"
+import { couple } from "@/data/couple"
+import type { DateKey, Lang, PersonId } from "@/data/types"
 import { SENTENCES, tokensOf, type Sentence } from "@/data/sentences"
 import { CONFUSABLE, VOCAB, type Topic, type VocabItem } from "@/data/vocab"
 import { daysBetween } from "@/lib/time"
 
 /**
- * Progresso do "Aprender", guardado só neste aparelho (localStorage).
+ * Progresso do "Aprender", separado por pessoa. Fica no localStorage do aparelho e, com o cofre
+ * conectado, também no cofre (`doc.learn`, ver `learn-sync.ts`), pra valer em qualquer celular.
  * Repetição espaçada em caixas: acertou, a palavra sobe de caixa e volta mais tarde; errou, volta pra caixa 0.
  */
 const STORAGE_KEY = "sayang:learn"
@@ -18,6 +20,8 @@ export const XP_PER_ANSWER = 10
 interface ItemProgress {
   box: number
   due: number
+  /** Dia da última resposta: decide qual aparelho tem a versão mais nova da palavra. */
+  seen?: number
 }
 
 export interface LangProgress {
@@ -27,36 +31,59 @@ export interface LangProgress {
   lastDay: number | null
 }
 
-interface Store {
+/** O progresso de uma pessoa. */
+export interface LearnStore {
   /** Idioma escolhido para aprender, por idioma da interface. */
   target: Partial<Record<Lang, Lang>>
   progress: Partial<Record<Lang, LangProgress>>
 }
 
-const EMPTY: LangProgress = { items: {}, xp: 0, streak: 0, lastDay: null }
+type Device = Partial<Record<PersonId, LearnStore>>
 
-function load(): Store {
+const EMPTY: LangProgress = { items: {}, xp: 0, streak: 0, lastDay: null }
+export const EMPTY_STORE: LearnStore = { target: {}, progress: {} }
+const PEOPLE = Object.keys(couple.people) as PersonId[]
+
+/**
+ * Antes o aparelho guardava um progresso só, sem dono. Cada idioma vai pra quem escolheu aprendê-lo
+ * ou, se ninguém escolheu, pra quem não fala aquele idioma (o indonésio é do Marcel, o português da Gabriela).
+ */
+function migrate(old: LearnStore): Device {
+  const device: Device = {}
+  for (const [lang, p] of Object.entries(old.progress) as [Lang, LangProgress][]) {
+    const owner =
+      PEOPLE.find((person) => old.target[couple.people[person].defaultLang] === lang) ??
+      PEOPLE.find((person) => couple.people[person].defaultLang !== lang) ??
+      PEOPLE[0]
+    const mine = device[owner] ?? { target: old.target, progress: {} }
+    device[owner] = { ...mine, progress: { ...mine.progress, [lang]: p } }
+  }
+  return device
+}
+
+function load(): Device {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null")
-    if (parsed && typeof parsed === "object") return { target: parsed.target ?? {}, progress: parsed.progress ?? {} }
+    if (parsed?.people) return parsed.people
+    if (parsed?.progress) return migrate({ target: parsed.target ?? {}, progress: parsed.progress })
   } catch {
     // Sem armazenamento: o progresso vale só nesta visita.
   }
-  return { target: {}, progress: {} }
+  return {}
 }
 
-let store: Store | null = null
+let device: Device | null = null
 const listeners = new Set<() => void>()
 
-function getStore() {
-  store ??= load()
-  return store
+function getDevice() {
+  device ??= load()
+  return device
 }
 
-function setStore(next: Store) {
-  store = next
+function setDevice(next: Device) {
+  device = next
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ v: 2, people: next }))
   } catch {
     // Idem: segue só em memória.
   }
@@ -70,46 +97,95 @@ function subscribe(listener: () => void) {
   }
 }
 
-export function useLearnStore() {
-  return React.useSyncExternalStore(subscribe, getStore)
+export const storeOf = (me: PersonId) => getDevice()[me] ?? EMPTY_STORE
+
+export function setStoreOf(me: PersonId, next: LearnStore) {
+  setDevice({ ...getDevice(), [me]: next })
+}
+
+export function useLearnStore(me: PersonId) {
+  return React.useSyncExternalStore(subscribe, () => storeOf(me))
 }
 
 /** Número do dia (no calendário de quem está olhando), para comparar datas com conta simples. */
 export const dayNumber = (key: DateKey) => daysBetween("2026-01-01", key)
 
-export const progressOf = (s: Store, target: Lang) => s.progress[target] ?? EMPTY
+export const progressOf = (s: LearnStore, target: Lang) => s.progress[target] ?? EMPTY
 
-export function setTarget(base: Lang, target: Lang) {
-  const s = getStore()
-  setStore({ ...s, target: { ...s.target, [base]: target } })
+export function setTarget(me: PersonId, base: Lang, target: Lang) {
+  const s = storeOf(me)
+  setStoreOf(me, { ...s, target: { ...s.target, [base]: target } })
 }
 
 /** Acerto só sobe de caixa quando a palavra é nova ou já venceu: acertar de novo no mesmo dia não conta. */
-export function recordAnswer(target: Lang, key: string, correct: boolean, today: number) {
-  const s = getStore()
+export function recordAnswer(me: PersonId, target: Lang, key: string, correct: boolean, today: number) {
+  const s = storeOf(me)
   const p = progressOf(s, target)
   const current = p.items[key]
   if (correct && current && current.due > today) {
-    setStore({ ...s, progress: { ...s.progress, [target]: { ...p, xp: p.xp + XP_PER_ANSWER } } })
+    setStoreOf(me, { ...s, progress: { ...s.progress, [target]: { ...p, xp: p.xp + XP_PER_ANSWER } } })
     return
   }
   const box = correct ? Math.min((current?.box ?? 0) + 1, BOX_DAYS.length - 1) : 0
-  const items = { ...p.items, [key]: { box, due: today + BOX_DAYS[box] } }
-  setStore({ ...s, progress: { ...s.progress, [target]: { ...p, items, xp: p.xp + (correct ? XP_PER_ANSWER : 0) } } })
+  const items = { ...p.items, [key]: { box, due: today + BOX_DAYS[box], seen: today } }
+  setStoreOf(me, { ...s, progress: { ...s.progress, [target]: { ...p, items, xp: p.xp + (correct ? XP_PER_ANSWER : 0) } } })
 }
 
 /** Fecha a lição do dia: conta a sequência de dias seguidos. */
-export function finishLesson(target: Lang, today: number) {
-  const s = getStore()
+export function finishLesson(me: PersonId, target: Lang, today: number) {
+  const s = storeOf(me)
   const p = progressOf(s, target)
   const streak = p.lastDay === today ? p.streak : p.lastDay === today - 1 ? p.streak + 1 : 1
-  setStore({ ...s, progress: { ...s.progress, [target]: { ...p, streak, lastDay: today } } })
+  setStoreOf(me, { ...s, progress: { ...s.progress, [target]: { ...p, streak, lastDay: today } } })
 }
+
+const seenOf = (item: ItemProgress) => item.seen ?? -1
+const newer = (a: ItemProgress, b: ItemProgress) =>
+  seenOf(a) !== seenOf(b) ? (seenOf(a) > seenOf(b) ? a : b) : a.box >= b.box ? a : b
+
+function mergeProgress(a: LangProgress, b: LangProgress): LangProgress {
+  const items = { ...b.items }
+  for (const [key, item] of Object.entries(a.items)) items[key] = items[key] ? newer(item, items[key]) : item
+  const dayA = a.lastDay ?? -1
+  const dayB = b.lastDay ?? -1
+  const recent = dayA !== dayB ? (dayA > dayB ? a : b) : a.streak >= b.streak ? a : b
+  return { items, xp: Math.max(a.xp, b.xp), streak: recent.streak, lastDay: recent.lastDay }
+}
+
+/** Junta o progresso de dois aparelhos: em cada palavra vale a resposta mais recente; `a` decide o idioma escolhido. */
+export function mergeStores(a: LearnStore, b: LearnStore | undefined): LearnStore {
+  if (!b) return a
+  const progress = { ...b.progress }
+  for (const [lang, p] of Object.entries(a.progress) as [Lang, LangProgress][]) {
+    const other = progress[lang]
+    progress[lang] = other ? mergeProgress(p, other) : p
+  }
+  return { target: { ...b.target, ...a.target }, progress }
+}
+
+/** JSON com as chaves em ordem, pra comparar duas versões sem depender da ordem em que foram montadas. */
+export const canonical = (value: unknown) =>
+  JSON.stringify(value, (_, v) =>
+    v && typeof v === "object" && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+      : v
+  )
 
 export const currentStreak = (p: LangProgress, today: number) =>
   p.lastDay !== null && p.lastDay >= today - 1 ? p.streak : 0
 
 export const isLearned = (p: LangProgress, key: string) => (p.items[key]?.box ?? 0) >= LEARNED_BOX
+
+/** Resumo do progresso do outro: o idioma que ele mais estudou, quantas palavras aprendeu e a sequência. */
+export function summaryOf(s: LearnStore | undefined, today: number) {
+  const best = Object.entries(s?.progress ?? {}).sort(([, a], [, b]) => b.xp - a.xp)[0] as
+    | [Lang, LangProgress]
+    | undefined
+  if (!best) return null
+  const [lang, p] = best
+  const words = VOCAB.filter((item) => isLearned(p, item.key)).length
+  return words ? { lang, words, streak: currentStreak(p, today) } : null
+}
 
 const isDue = (p: LangProgress, key: string, today: number) => {
   const item = p.items[key]

@@ -1,6 +1,7 @@
 import * as React from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowReloadHorizontalIcon, ArrowRight01Icon, FireIcon, StarIcon, BookOpen01Icon } from "@hugeicons/core-free-icons"
+import { cn } from "cn"
 
 import { Lesson, ListenButton } from "@/components/lesson"
 import { Button } from "@/components/ui/button"
@@ -24,26 +25,36 @@ import {
   progressOf,
   sentencesOf,
   setTarget,
+  summaryOf,
   useLearnStore,
   type Question,
 } from "@/lib/learn"
+import { useLearnSync } from "@/lib/learn-sync"
+import { PERSON_LOOK } from "@/lib/look"
 import { usePrefs } from "@/lib/prefs"
 import { partnerOf } from "@/lib/schedule"
 import { hasVoice } from "@/lib/speech"
 import { localParts } from "@/lib/time"
+import { useVault } from "@/lib/vault/vault"
 
 const LANGS: Lang[] = ["id", "pt", "en"]
 
 export function LearnView({ me, now }: { me: PersonId; now: number }) {
   const { lang: base, t } = usePrefs()
-  const store = useLearnStore()
+  const store = useLearnStore(me)
+  const { doc } = useVault()
   const [lesson, setLesson] = React.useState<{
     questions: Question[]
     intro?: { topic: Topic; newItems: VocabItem[] }
   } | null>(null)
+  useLearnSync(me, lesson === null)
+
+  const partner = partnerOf(me)
+  const partnerToday = dayNumber(localParts(now, couple.people[partner].timeZone).dateKey)
+  const partnerSummary = summaryOf(doc?.learn?.[partner], partnerToday)
 
   const targets = LANGS.filter((l) => l !== base)
-  const partnerLang = couple.people[partnerOf(me)].defaultLang
+  const partnerLang = couple.people[partner].defaultLang
   const stored = store.target[base]
   const target = stored && targets.includes(stored) ? stored : targets.includes(partnerLang) ? partnerLang : targets[0]
 
@@ -81,7 +92,7 @@ export function LearnView({ me, now }: { me: PersonId; now: number }) {
 
       <div className="flex flex-col gap-2 px-1">
         <span className="text-sm font-medium">{t("learnPick")}</span>
-        <ToggleGroup value={[target]} onValueChange={(v) => v[0] && setTarget(base, v[0] as Lang)} variant="outline">
+        <ToggleGroup value={[target]} onValueChange={(v) => v[0] && setTarget(me, base, v[0] as Lang)} variant="outline">
           {targets.map((l) => (
             <ToggleGroupItem key={l} value={l} className="capitalize">
               {t(`lang_${l}`)}
@@ -99,8 +110,20 @@ export function LearnView({ me, now }: { me: PersonId; now: number }) {
           <HugeiconsIcon icon={StarIcon} strokeWidth={2} className="size-4" />
           {t("xp", { n: progress.xp })}
         </span>
-        <span className="text-muted-foreground">{t("wordsLearned", { n: learned })}</span>
+        <span className="text-muted-foreground">{learned === 1 ? t("wordsLearnedOne") : t("wordsLearned", { n: learned })}</span>
       </div>
+
+      {partnerSummary && (
+        <p className="flex items-center gap-2 px-1 text-sm text-muted-foreground">
+          <span className={cn("size-2 shrink-0 rounded-full", PERSON_LOOK[partner].dot)} aria-hidden />
+          {t(partnerSummary.streak > 1 ? "partnerLearnedStreak" : "partnerLearned", {
+            name: couple.people[partner].name,
+            words: partnerSummary.words === 1 ? t("wordCountOne") : t("wordCount", { n: partnerSummary.words }),
+            lang: t(`lang_${partnerSummary.lang}`),
+            days: partnerSummary.streak,
+          })}
+        </p>
+      )}
 
       <WordOfTheDay target={target} base={base} day={today} />
 

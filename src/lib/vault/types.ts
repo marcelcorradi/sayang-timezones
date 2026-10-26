@@ -1,4 +1,5 @@
 import type { DateKey, Lang, PersonId } from "@/data/types"
+import type { LearnStore } from "@/lib/learn"
 
 /** Um motivo que `from` escreveu e vai para o pote do outro. */
 export interface Reason {
@@ -43,6 +44,8 @@ export interface VaultDoc {
   reasons: Reason[]
   letters: Letter[]
   notes: WakeNote[]
+  /** Progresso do "Aprender" de cada um, pra valer em qualquer celular. Ausente em cofres antigos. */
+  learn?: Partial<Record<PersonId, LearnStore>>
 }
 
 /** O que fica salvo no repositório: só texto criptografado. */
