@@ -45,6 +45,7 @@ Stack: React, Vite, Tailwind v4, shadcn/ui (Base UI) e vite-plugin-pwa. O clima 
 
 | Skill | Para quê |
 | --- | --- |
+| `sayang` | Porta de entrada: escolhe a skill certa, divide pedidos mistos e fecha com checagens, docs, commit e deploy |
 | `sayang-agenda` | Adicionar e editar rotinas, folgas, compromissos e datas |
 | `sayang-design` | Direção visual, regras de UI e idiomas para novas telas e funcionalidades |
 | `frontend-design` | Skill oficial da Anthropic (`anthropics/skills`) |
