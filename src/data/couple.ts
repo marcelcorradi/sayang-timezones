@@ -38,7 +38,8 @@ export const couple: CoupleData = {
     },
   },
 
-  together: null,
+  // Quando o namoro ficou sério e exclusivo.
+  together: "2026-10-25",
   nextVisit: null,
   importantDates: [],
 
@@ -50,7 +51,7 @@ export const couple: CoupleData = {
     { id: "marcel-lunch", who: "marcel", activity: "lunch", days: WEEKDAYS, start: "12:00", end: "13:00" },
 
     { id: "gabriela-sleep", who: "gabriela", activity: "sleep", days: EVERY_DAY, start: "23:00", end: "07:00" },
-    { id: "gabriela-work", who: "gabriela", activity: "work", days: WEEKDAYS, start: "09:00", end: "18:00" },
+    { id: "gabriela-work", who: "gabriela", activity: "work", days: WEEKDAYS, start: "08:00", end: "19:00" },
     { id: "gabriela-lunch", who: "gabriela", activity: "lunch", days: WEEKDAYS, start: "12:00", end: "13:00" },
   ],
 
