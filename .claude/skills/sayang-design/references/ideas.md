@@ -14,10 +14,12 @@ Vieram de uma pesquisa sobre apps para casais a distância (Cupla, Without, Lock
 - PWA: instala na tela inicial e funciona offline.
 - Português, inglês e indonésio, e um link que abre já configurado para a outra pessoa.
 - Cofre criptografado no próprio repositório (branch `vault`) com:
-  - pote de motivos (um pote para cada, com motivos sorteados);
+  - pote de motivos (um pote para cada; o sorteio tira só os não lidos, e os lidos ficam numa lista pra reler);
   - cartas "abra quando…" (por sentimento ou por data);
   - recado que aparece quando o outro acordar;
-  - nossos medos: cada um compartilha um medo, os dois conversam embaixo, quem escreveu pode marcar "tá mais leve" ou apagar, e o outro recebe um aviso no ntfy sem o conteúdo.
+  - nossos medos, numa aba por pessoa: cada um compartilha um medo, os dois conversam embaixo, quem escreveu pode marcar "tá mais leve" ou apagar, e o outro recebe um aviso no ntfy sem o conteúdo;
+  - aniversário que cada um coloca no app e que aparece nas datas especiais.
+- O que o outro escreveu (motivos, cartas, recados, medos) já aparece traduzido pro idioma de quem lê, com o original a um toque.
 - Toques pelo ntfy ("Pensando em você", "Me liga?", "Tô livre", bom dia e boa noite), com notificação de verdade no celular.
 - A mesma lua: fase de hoje e quando ela está no céu das duas cidades ao mesmo tempo.
 - Céu dos painéis com o nascer e o pôr do sol reais.

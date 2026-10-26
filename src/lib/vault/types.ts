@@ -8,6 +8,8 @@ export interface Reason {
   text: string
   lang: Lang
   createdAt: string
+  /** Quando quem recebe tirou o motivo do pote pela primeira vez. */
+  readAt?: string
 }
 
 export type Feeling = "miss" | "sad" | "badDay" | "cantSleep" | "happy" | "laugh"
@@ -70,6 +72,8 @@ export interface VaultDoc {
   learn?: Partial<Record<PersonId, LearnStore>>
   /** Medos dos dois, com a conversa de cada um. Ausente em cofres antigos. */
   fears?: Fear[]
+  /** Aniversário que cada um colocou no app. Ausente em cofres antigos. */
+  birthdays?: Partial<Record<PersonId, DateKey>>
 }
 
 /** O que fica salvo no repositório: só texto criptografado. */

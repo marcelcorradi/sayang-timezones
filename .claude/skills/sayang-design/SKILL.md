@@ -84,13 +84,14 @@ Toda frase visível existe em **português, inglês e indonésio**, em `src/lib/
 
 ### Cofre (`src/lib/vault/`): o que um escreve e o outro lê
 
-Motivos do pote, cartas "abra quando…", recados de quando acordar, os medos com a conversa de cada um (`fears.tsx`) e o progresso do Aprender ficam em `vault.json`, no branch `vault` deste repositório. O arquivo é criptografado com AES-GCM, usando uma chave derivada da senha do casal (PBKDF2, 310 mil iterações). O app lê e grava pela API do GitHub com uma chave pessoal (fine-grained token, Contents de leitura e escrita só neste repositório). O branch separado faz com que salvar não republique o site.
+Motivos do pote, cartas "abra quando…", recados de quando acordar, os medos com a conversa de cada um (`fears.tsx`), o aniversário que cada um colocou (`birthdays.tsx`) e o progresso do Aprender ficam em `vault.json`, no branch `vault` deste repositório. O arquivo é criptografado com AES-GCM, usando uma chave derivada da senha do casal (PBKDF2, 310 mil iterações). O app lê e grava pela API do GitHub com uma chave pessoal (fine-grained token, Contents de leitura e escrita só neste repositório). O branch separado faz com que salvar não republique o site.
 
 - Em componentes, use `useVault()`: `doc` (o conteúdo aberto ou `null`), `update(d => { … })` (relê, aplica, criptografa e salva, e tenta de novo se os dois salvarem juntos) e `saving`.
 - Para guardar um tipo novo de coisa, adicione o campo em `VaultDoc` (`src/lib/vault/types.ts`) e trate a ausência dele em cofres antigos (`doc.novo ?? []`).
 - Sem cofre conectado, mostre `<VaultCta />` no lugar da função.
 - Para desenvolver sem GitHub, rode `VITE_VAULT_LOCAL=1 npx vite`: o cofre vai para o localStorage.
 - Nunca grave nada sem criptografar, nem coloque o token ou a senha em código ou em log.
+- Texto escrito pelo outro passa por `<Translatable>`, que já mostra a tradução pro idioma de quem lê (`src/lib/translate.ts`: tradutor embutido do navegador e, sem ele, o Google Tradutor, com cache na memória). O texto sai decifrado só pra essa tradução. `useTranslated` serve pra prévias de uma linha.
 - Aviso no ntfy sobre algo do cofre nunca leva o texto: o ntfy.sh recebe a mensagem sem criptografia. Diga só que chegou algo ("Gabriela te respondeu em Nossos medos").
 
 ### Toques (`src/lib/ntfy.ts`): notificação no celular

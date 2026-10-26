@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon, Delete02Icon, FeatherIcon } from "@hugeicons/core-free-icons"
 import { cn } from "cn"
 
-import { Translatable } from "@/components/translatable"
+import { Translatable, useTranslated } from "@/components/translatable"
 import { VaultCta } from "@/components/vault-setup"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Field } from "@/components/ui/field"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { couple } from "@/data/couple"
 import type { Lang, PersonId } from "@/data/types"
@@ -50,41 +51,72 @@ function useNotify(me: PersonId, partner: PersonId) {
 export function Fears({ me, partner }: { me: PersonId; partner: PersonId }) {
   const { t } = usePrefs()
   const { doc, state } = useVault()
-  // Uma lista só, com os mais leves no fim: assim marcar "mais leve" não remonta a linha e a sheet continua aberta.
-  const fears = [...(doc?.fears ?? [])].sort(
-    (a, b) => Number(!!a.easedAt) - Number(!!b.easedAt) || lastActivity(b).localeCompare(lastActivity(a)),
-  )
-  const firstEased = fears.find((f) => f.easedAt)
+  const all = doc?.fears ?? []
+  const hasNew = (person: PersonId) => all.some((f) => f.from === person && isNewFor(f, me))
+  // Abre na aba que tem novidade; sem novidade, nos medos do outro.
+  const [tab, setTab] = React.useState<PersonId>(() => (!hasNew(partner) && hasNew(me) ? me : partner))
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="font-heading text-xl font-semibold">{t("fearsTitle")}</CardTitle>
-        <CardDescription>{doc && fears.length === 0 ? t("fearsEmpty") : t("fearsIntro")}</CardDescription>
+        <CardDescription>{t("fearsIntro")}</CardDescription>
       </CardHeader>
-      {(fears.length > 0 || (!doc && state.status !== "loading")) && (
-        <CardContent className="flex flex-col gap-2">
-          {!doc && state.status !== "loading" && <VaultCta className="self-start" />}
-          {fears.map((fear) => (
-            <React.Fragment key={fear.id}>
-              {fear === firstEased && (
-                <>
-                  <Separator className="my-2" />
-                  <p className="text-xs font-medium text-muted-foreground">{t("fearsEased")}</p>
-                </>
-              )}
-              <FearThread fear={fear} me={me} partner={partner} />
-            </React.Fragment>
-          ))}
-        </CardContent>
-      )}
+      <CardContent className="flex flex-col gap-2">
+        {!doc && state.status !== "loading" && <VaultCta className="self-start" />}
+        {doc && (
+          <Tabs value={tab} onValueChange={(v) => setTab(v as PersonId)}>
+            <TabsList className="w-full">
+              {[partner, me].map((person) => (
+                <TabsTrigger key={person} value={person}>
+                  <span className={cn("size-2 rounded-full", PERSON_LOOK[person].dot)} />
+                  {couple.people[person].name}
+                  {hasNew(person) && <span className="size-1.5 rounded-full bg-primary" aria-label={t("fearNew")} />}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {[partner, me].map((person) => (
+              <TabsContent key={person} value={person} className="flex flex-col gap-2 pt-1">
+                <FearList person={person} fears={all.filter((f) => f.from === person)} me={me} partner={partner} />
+              </TabsContent>
+            ))}
+          </Tabs>
+        )}
+      </CardContent>
       {doc && (
         <CardFooter>
-          <ShareFear me={me} partner={partner} />
+          <ShareFear me={me} partner={partner} onShared={() => setTab(me)} />
         </CardFooter>
       )}
     </Card>
   )
+}
+
+function FearList({ person, fears, me, partner }: { person: PersonId; fears: Fear[]; me: PersonId; partner: PersonId }) {
+  const { t } = usePrefs()
+  if (!fears.length) {
+    return (
+      <p className="py-2 text-sm text-muted-foreground">
+        {person === me ? t("fearsEmptyMine") : t("fearsEmptyPartner", { name: couple.people[person].name })}
+      </p>
+    )
+  }
+  // Uma lista só, com os mais leves no fim: assim marcar "mais leve" não remonta a linha e a sheet continua aberta.
+  const sorted = [...fears].sort(
+    (a, b) => Number(!!a.easedAt) - Number(!!b.easedAt) || lastActivity(b).localeCompare(lastActivity(a)),
+  )
+  const firstEased = sorted.find((f) => f.easedAt)
+  return sorted.map((fear) => (
+    <React.Fragment key={fear.id}>
+      {fear === firstEased && (
+        <>
+          <Separator className="my-2" />
+          <p className="text-xs font-medium text-muted-foreground">{t("fearsEased")}</p>
+        </>
+      )}
+      <FearThread fear={fear} me={me} partner={partner} />
+    </React.Fragment>
+  ))
 }
 
 function FearThread({ fear, me, partner }: { fear: Fear; me: PersonId; partner: PersonId }) {
@@ -96,6 +128,7 @@ function FearThread({ fear, me, partner }: { fear: Fear; me: PersonId; partner: 
   const mine = fear.from === me
   const fresh = isNewFor(fear, me)
   const n = fear.replies.length
+  const preview = useTranslated(fear.text, fear.lang, !mine) ?? fear.text
 
   const withFear = (change: (f: Fear) => void) =>
     update((d) => {
@@ -138,7 +171,7 @@ function FearThread({ fear, me, partner }: { fear: Fear; me: PersonId; partner: 
     >
       <SheetTrigger className="flex items-center gap-3 rounded-2xl bg-muted/60 px-3 py-2.5 text-left outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50">
         <span className={cn("size-2 shrink-0 rounded-full", PERSON_LOOK[fear.from].dot)} />
-        <span className={cn("flex-1 truncate", fear.easedAt ? "text-muted-foreground" : "font-medium")}>{fear.text}</span>
+        <span className={cn("flex-1 truncate", fear.easedAt ? "text-muted-foreground" : "font-medium")}>{preview}</span>
         {fresh ? (
           <Badge>{t("fearNew")}</Badge>
         ) : (
@@ -214,7 +247,7 @@ function when(iso: string, me: PersonId, lang: Lang) {
   return `${formatDateKey(localParts(t, tz).dateKey, lang, { day: "numeric", month: "long" })}, ${formatClock(t, tz)}`
 }
 
-function ShareFear({ me, partner }: { me: PersonId; partner: PersonId }) {
+function ShareFear({ me, partner, onShared }: { me: PersonId; partner: PersonId; onShared: () => void }) {
   const { lang, t } = usePrefs()
   const { update, saving } = useVault()
   const notify = useNotify(me, partner)
@@ -229,6 +262,7 @@ function ShareFear({ me, partner }: { me: PersonId; partner: PersonId }) {
     if (ok) {
       setText("")
       setOpen(false)
+      onShared()
       notify("fearNotifyNew")
     }
   }

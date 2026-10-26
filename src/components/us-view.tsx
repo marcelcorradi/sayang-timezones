@@ -12,20 +12,23 @@ import {
 } from "@hugeicons/core-free-icons"
 import { cn } from "cn"
 
+import { MyBirthday } from "@/components/birthdays"
 import { Fears } from "@/components/fears"
 import { Jar } from "@/components/jar"
 import { Letters } from "@/components/letters"
 import { MoonCard } from "@/components/moon-card"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Separator } from "@/components/ui/separator"
 import { couple } from "@/data/couple"
 import type { DateKey, Lang, PersonId } from "@/data/types"
 import { useWeather } from "@/hooks/use-weather"
+import type { TranslationKey } from "@/lib/i18n"
 import { usePrefs } from "@/lib/prefs"
 import { PERSON_LOOK } from "@/lib/look"
 import { PEOPLE, partnerOf } from "@/lib/schedule"
 import { daysBetween, formatClock, formatDateKey, localParts } from "@/lib/time"
+import { useVault } from "@/lib/vault/vault"
 
 export function UsView({ me, now }: { me: PersonId; now: number }) {
   const todayKey = localParts(now, couple.people[me].timeZone).dateKey
@@ -40,7 +43,7 @@ export function UsView({ me, now }: { me: PersonId; now: number }) {
       <MoonCard me={me} now={now} />
       <WeatherCard now={now} />
       {couple.together && <Together todayKey={todayKey} />}
-      <ImportantDates todayKey={todayKey} />
+      <ImportantDates me={me} now={now} todayKey={todayKey} />
       {!hasVisit && <Countdown todayKey={todayKey} />}
       {!couple.together && <Together todayKey={todayKey} />}
     </div>
@@ -171,10 +174,18 @@ function weatherLook(code: number, isDay: boolean): { icon: typeof Sun01Icon; la
   return { icon: CloudAngledRainZapIcon, label: { pt: "Tempestade", en: "Thunderstorm", id: "Hujan petir" } }
 }
 
-function ImportantDates({ todayKey }: { todayKey: DateKey }) {
+const BIRTHDAY_LABEL: Record<PersonId, TranslationKey> = { marcel: "birthdayMarcel", gabriela: "birthdayGabriela" }
+
+function ImportantDates({ me, now, todayKey }: { me: PersonId; now: number; todayKey: DateKey }) {
   const { lang, t } = usePrefs()
+  const { doc } = useVault()
   const year = Number(todayKey.slice(0, 4))
-  const upcoming = couple.importantDates
+  // Aniversários que cada um colocou no app repetem todo ano, como as datas "MM-DD" do couple.ts.
+  const birthdays = PEOPLE.flatMap((person) => {
+    const date = doc?.birthdays?.[person]
+    return date ? [{ id: `birthday-${person}`, date: date.slice(5), text: t(person === me ? "birthdayMine" : BIRTHDAY_LABEL[person]) }] : []
+  })
+  const upcoming = [...couple.importantDates.map((d) => ({ id: d.id, date: d.date, text: d.label[lang] ?? d.label.pt })), ...birthdays]
     .map((d) => {
       let key = (d.date.length === 5 ? `${year}-${d.date}` : d.date) as DateKey
       if (d.date.length === 5 && key < todayKey) key = `${year + 1}-${d.date}` as DateKey
@@ -184,7 +195,7 @@ function ImportantDates({ todayKey }: { todayKey: DateKey }) {
     .sort((a, b) => a.inDays - b.inDays)
     .slice(0, 5)
 
-  if (!upcoming.length) return null
+  if (!upcoming.length && !doc) return null
 
   return (
     <Card size="sm">
@@ -194,7 +205,7 @@ function ImportantDates({ todayKey }: { todayKey: DateKey }) {
       <CardContent className="flex flex-col gap-2">
         {upcoming.map((d) => (
           <div key={d.id} className="flex items-baseline justify-between gap-3">
-            <span className="truncate">{d.label[lang] ?? d.label.pt}</span>
+            <span className="truncate">{d.text}</span>
             <span className="shrink-0 text-muted-foreground tabular-nums">
               {formatDateKey(d.key, lang, { day: "numeric", month: "short" })}
               {" "}
@@ -203,6 +214,11 @@ function ImportantDates({ todayKey }: { todayKey: DateKey }) {
           </div>
         ))}
       </CardContent>
+      {doc && (
+        <CardFooter>
+          <MyBirthday me={me} now={now} />
+        </CardFooter>
+      )}
     </Card>
   )
 }
