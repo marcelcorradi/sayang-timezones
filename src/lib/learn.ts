@@ -11,7 +11,8 @@ import { daysBetween } from "@/lib/time"
  */
 const STORAGE_KEY = "sayang:learn"
 const BOX_DAYS = [0, 1, 2, 4, 7, 15]
-export const LEARNED_BOX = 2
+/** Conta como aprendida depois do primeiro acerto; errar depois devolve pra caixa 0 e ela sai da conta. */
+export const LEARNED_BOX = 1
 export const XP_PER_ANSWER = 10
 
 interface ItemProgress {
