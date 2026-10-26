@@ -65,5 +65,5 @@ export async function decryptDoc(file: VaultFile, passphrase: string): Promise<V
 }
 
 export function emptyDoc(): VaultDoc {
-  return { version: 1, ntfyTopic: `sayang-${randomId(18)}`, reasons: [], letters: [], notes: [] }
+  return { version: 1, ntfyTopic: `sayang-${randomId(18)}`, reasons: [], letters: [], notes: [], fears: [] }
 }

@@ -37,6 +37,28 @@ export interface WakeNote {
   seenAt?: string
 }
 
+export interface FearReply {
+  id: string
+  from: PersonId
+  text: string
+  lang: Lang
+  createdAt: string
+}
+
+/** Medo ou vulnerabilidade que `from` compartilhou; os dois conversam embaixo. */
+export interface Fear {
+  id: string
+  from: PersonId
+  text: string
+  lang: Lang
+  createdAt: string
+  replies: FearReply[]
+  /** Quem escreveu marcou que ficou mais leve. */
+  easedAt?: string
+  /** Última vez que cada um abriu, pra marcar "Novo". */
+  seenAt?: Partial<Record<PersonId, string>>
+}
+
 export interface VaultDoc {
   version: 1
   /** Base dos tópicos do ntfy; cada pessoa recebe em `${ntfyTopic}-${pessoa}`. */
@@ -46,6 +68,8 @@ export interface VaultDoc {
   notes: WakeNote[]
   /** Progresso do "Aprender" de cada um, pra valer em qualquer celular. Ausente em cofres antigos. */
   learn?: Partial<Record<PersonId, LearnStore>>
+  /** Medos dos dois, com a conversa de cada um. Ausente em cofres antigos. */
+  fears?: Fear[]
 }
 
 /** O que fica salvo no repositório: só texto criptografado. */

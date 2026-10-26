@@ -12,6 +12,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { cn } from "cn"
 
+import { Fears } from "@/components/fears"
 import { Jar } from "@/components/jar"
 import { Letters } from "@/components/letters"
 import { MoonCard } from "@/components/moon-card"
@@ -35,6 +36,7 @@ export function UsView({ me, now }: { me: PersonId; now: number }) {
       {hasVisit && <Countdown todayKey={todayKey} />}
       <Jar me={me} partner={partnerOf(me)} />
       <Letters me={me} partner={partnerOf(me)} now={now} />
+      <Fears me={me} partner={partnerOf(me)} />
       <MoonCard me={me} now={now} />
       <WeatherCard now={now} />
       {couple.together && <Together todayKey={todayKey} />}
