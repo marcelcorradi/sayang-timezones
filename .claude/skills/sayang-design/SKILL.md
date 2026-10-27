@@ -80,7 +80,7 @@ Toda frase visível existe em **português, inglês e indonésio**, em `src/lib/
   - `src/lib/learn-sync.ts`: com o cofre conectado, junta o progresso do aparelho com `doc.learn` (vale a resposta mais recente de cada palavra) e envia ao sair de uma lição. É daí que vem a linha "Gabriela já aprendeu…". Fica fora do `learn.ts` pra o `check:lessons` rodar sem o cofre;
   - `src/lib/speech.ts`: pronúncia pela voz do celular.
   Ao acrescentar conteúdo, confira as traduções com cuidado. O indonésio do casal é o falado (nggak, lagi, kangen), mas o vocabulário-base usa a forma padrão, com o jeito falado nas notas.
-- `src/lib/access.ts` + `access-notice.tsx`: o site fica atrás do Cloudflare Access (login por código no e-mail, sessão de 1 mês). O app instalado abre pelo cache mesmo com a sessão vencida; quando `entrar/` responde com redirecionamento, aparece o aviso pra entrar de novo. `public/entrar/` fica fora do cache do service worker (`globIgnores` e `navigateFallbackDenylist` no `vite.config.ts`) e não pode entrar nele.
+- `src/lib/access.ts` + `access-notice.tsx`: o site fica atrás do Cloudflare Access (login por código no e-mail, sessão de 1 mês). O app instalado abre pelo cache mesmo com a sessão vencida; quando `entrar/` responde com redirecionamento, aparece o aviso pra entrar de novo. `public/entrar/` fica fora do cache do service worker (`globIgnores` e `navigateFallbackDenylist` no `vite.config.ts`) e não pode entrar nele. O `useCredentials: true` do VitePWA faz o manifest ser buscado com o cookie do login; sem ele o "Instalar" automático some.
 - O site é estático (Cloudflare Workers, `wrangler.jsonc`), mas tem três formas de guardar ou enviar coisas entre os dois sem servidor próprio.
 
 ### Cofre (`src/lib/vault/`): o que um escreve e o outro lê
