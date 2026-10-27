@@ -15,6 +15,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
+      // O Chrome busca o manifest sem cookies por padrão; atrás do Cloudflare Access isso cai no login
+      // e o "Instalar" automático some.
+      useCredentials: true,
       includeAssets: ["icon.svg", "apple-touch-icon-180x180.png", "favicon.ico"],
       manifest: {
         name: "Sayang",
