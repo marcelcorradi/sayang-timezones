@@ -1,6 +1,6 @@
 ---
 name: sayang-design
-description: Direção visual e regras de construção do app Sayang (React + Vite + shadcn/ui com Base UI + Tailwind v4, hospedado no Cloudflare Pages), o relógio de casal de Marcel (Itaúna, Brasil) e Gabriela (Jakarta, Indonésia). Use sempre que for criar ou mudar telas, componentes, cores, textos da interface, traduções ou qualquer funcionalidade nova do app, incluindo as ideias do backlog (recadinhos, notificações, status ao vivo, lista de desejos), mesmo que o pedido seja curto como "coloca um botão" ou "muda essa cor". Para mudanças só na agenda (horários, folgas, datas), use a skill sayang-agenda.
+description: Direção visual e regras de construção do app Sayang (React + Vite + shadcn/ui com Base UI + Tailwind v4, hospedado no Cloudflare Workers), o relógio de casal de Marcel (Itaúna, Brasil) e Gabriela (Jakarta, Indonésia). Use sempre que for criar ou mudar telas, componentes, cores, textos da interface, traduções ou qualquer funcionalidade nova do app, incluindo as ideias do backlog (recadinhos, notificações, status ao vivo, lista de desejos), mesmo que o pedido seja curto como "coloca um botão" ou "muda essa cor". Para mudanças só na agenda (horários, folgas, datas), use a skill sayang-agenda.
 ---
 
 # Design e construção do Sayang
@@ -81,7 +81,7 @@ Toda frase visível existe em **português, inglês e indonésio**, em `src/lib/
   - `src/lib/speech.ts`: pronúncia pela voz do celular.
   Ao acrescentar conteúdo, confira as traduções com cuidado. O indonésio do casal é o falado (nggak, lagi, kangen), mas o vocabulário-base usa a forma padrão, com o jeito falado nas notas.
 - `src/lib/access.ts` + `access-notice.tsx`: o site fica atrás do Cloudflare Access (login por código no e-mail, sessão de 1 mês). O app instalado abre pelo cache mesmo com a sessão vencida; quando `entrar/` responde com redirecionamento, aparece o aviso pra entrar de novo. `public/entrar/` fica fora do cache do service worker (`globIgnores` e `navigateFallbackDenylist` no `vite.config.ts`) e não pode entrar nele.
-- O site é estático (Cloudflare Pages), mas tem três formas de guardar ou enviar coisas entre os dois sem servidor próprio.
+- O site é estático (Cloudflare Workers, `wrangler.jsonc`), mas tem três formas de guardar ou enviar coisas entre os dois sem servidor próprio.
 
 ### Cofre (`src/lib/vault/`): o que um escreve e o outro lê
 

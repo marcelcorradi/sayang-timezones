@@ -4,7 +4,7 @@ O relógio do Marcel (Itaúna, Brasil) e da Gabriela (Jakarta, Indonésia): o qu
 
 ## No celular
 
-Abra o endereço do app no Cloudflare (`<projeto>.pages.dev`), entre com o código que chega no e-mail e use "Adicionar à tela inicial" (Safari no iPhone, Chrome no Android). O app abre como aplicativo e funciona sem internet. Na engrenagem, "Copiar link pra Gabriela" gera um link que já abre configurado para ela, em indonésio.
+Abra o endereço do app no Cloudflare (`sayang.<subdominio>.workers.dev`), entre com o código que chega no e-mail e use "Adicionar à tela inicial" (Safari no iPhone, Chrome no Android). O app abre como aplicativo e funciona sem internet. Na engrenagem, "Copiar link pra Gabriela" gera um link que já abre configurado para ela, em indonésio.
 
 ## Recados, cartas, pote e toques
 
@@ -37,14 +37,14 @@ VITE_VAULT_LOCAL=1 npm run dev   # cofre no navegador, sem GitHub
 npm run icons                    # regenera os ícones a partir de public/icon.svg
 ```
 
-Cada push na `main` publica o site pelo Cloudflare Pages.
+Cada push na `main` publica o site pelo Cloudflare (Workers Builds).
 
 ## Hospedagem e login
 
-O repositório é privado, e o site fica no Cloudflare Pages, atrás do Cloudflare Access. Só os e-mails do Marcel e da Gabriela entram.
+O repositório é privado, e o site fica no Cloudflare como um Worker só de arquivos estáticos ([`wrangler.jsonc`](wrangler.jsonc)), atrás do Cloudflare Access. Só os e-mails do Marcel e da Gabriela entram.
 
-- **Cloudflare Pages** (Workers & Pages → projeto ligado a este repositório): build command `npm run check && npm run check:lessons && npm run build`, output `dist`, variável `NODE_VERSION=24`.
-- **Cloudflare Zero Trust → Access → Applications** (Self-hosted): domínios `<projeto>.pages.dev` e `*.<projeto>.pages.dev`, política *Allow* com os dois e-mails, login por *One-time PIN*, *Session duration* de 1 mês.
+- **Workers & Pages → Create application → Import a repository** (`sayang-timezones`): build command `npm run check && npm run check:lessons && npm run build`, deploy command `npx wrangler deploy`. A versão do Node vem de `.node-version`.
+- **Login:** no Worker `sayang`, em *Settings → Domains & Routes*, `workers.dev` → *Enable Cloudflare Access*. Em *Manage Cloudflare Access*, ficam só os dois e-mails e a *Session duration* de 1 mês. Os acessos de arquivos estáticos não contam no limite do plano grátis.
 - Com a sessão vencida, o app instalado continua abrindo pelo cache, e o cofre e os toques funcionam normalmente. Só as versões novas deixam de chegar, e o app mostra um aviso pra entrar de novo (`/entrar/`).
 
 Stack: React, Vite, Tailwind v4, shadcn/ui (Base UI) e vite-plugin-pwa. O clima vem da [Open-Meteo](https://open-meteo.com/).

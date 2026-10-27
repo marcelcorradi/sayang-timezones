@@ -13,7 +13,7 @@ Vieram de uma pesquisa sobre apps para casais a distância (Cupla, Without, Lock
 - Datas especiais (aniversários etc.).
 - PWA: instala na tela inicial e funciona offline.
 - Português, inglês e indonésio, e um link que abre já configurado para a outra pessoa.
-- Site privado: Cloudflare Pages + Cloudflare Access (código no e-mail, só os dois), sessão de 1 mês e aviso pra entrar de novo quando ela vence.
+- Site privado: Cloudflare Workers + Cloudflare Access (código no e-mail, só os dois), sessão de 1 mês e aviso pra entrar de novo quando ela vence.
 - Cofre criptografado num repositório privado só dele (`sayang-cofre`) com:
   - pote de motivos (um pote para cada; o sorteio tira só os não lidos, e os lidos ficam numa lista pra reler);
   - cartas "abra quando…" (por sentimento ou por data);

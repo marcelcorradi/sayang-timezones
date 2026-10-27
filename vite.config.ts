@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
 
-// O Cloudflare Pages serve o app na raiz do domínio.
+// O Cloudflare (wrangler.jsonc) serve o app na raiz do domínio.
 const base = process.env.BASE_PATH ?? "/"
 
 // https://vite.dev/config/

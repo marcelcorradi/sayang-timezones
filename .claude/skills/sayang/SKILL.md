@@ -5,7 +5,7 @@ description: Porta de entrada para qualquer pedido sobre o app Sayang, o relógi
 
 # Sayang: por onde começar
 
-O Sayang é um site estático (Cloudflare Pages, com login do Cloudflare Access) que mostra o que Marcel e Gabriela estão fazendo agora, quando os dois podem se falar e quanto falta pro reencontro, em pt, en e id. Quem pede é quase sempre o Marcel, em português informal e às vezes com uma frase só. O trabalho desta skill é pegar esse pedido, mandar pra skill certa, e garantir que o resultado chegue no ar sem quebrar nada.
+O Sayang é um site estático (Cloudflare Workers com arquivos estáticos e login do Cloudflare Access) que mostra o que Marcel e Gabriela estão fazendo agora, quando os dois podem se falar e quanto falta pro reencontro, em pt, en e id. Quem pede é quase sempre o Marcel, em português informal e às vezes com uma frase só. O trabalho desta skill é pegar esse pedido, mandar pra skill certa, e garantir que o resultado chegue no ar sem quebrar nada.
 
 As skills especializadas já sabem fazer o trabalho de cada área. Esta não repete o que elas dizem: ela escolhe, ordena e fecha.
 
