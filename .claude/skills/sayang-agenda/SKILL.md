@@ -103,7 +103,7 @@ Feriados brasileiros nacionais têm data conhecida. Os indonésios mudam todo an
 2. Faça a edição no lugar certo, mantendo o estilo do arquivo: uma regra por linha, agrupadas por pessoa.
 3. Rode `npm run check -- <YYYY-MM-DD> <dias>` cobrindo a data afetada (sem argumentos, mostra os próximos 7 dias). Se acusar erro, corrija.
 4. Na resposta, mostre o efeito nos dois relógios, usando o que o check imprimiu. Por exemplo: "Academia dela seg/qua/sex 19:00–20:00 em Jakarta = 09:00–10:00 pra você. A janela de vocês na segunda à noite continua 21:00–23:00."
-5. Publicar: o deploy no GitHub Pages acontece quando o commit chega na `main`. Faça um commit com mensagem curta em português (ex.: `agenda: academia da Gabriela seg/qua/sex`). Faça o push se o usuário já pediu para publicar ou atualizar o app. Senão, pergunte em uma linha se pode publicar.
+5. Publicar: o deploy no Cloudflare Pages acontece quando o commit chega na `main`. Faça um commit com mensagem curta em português (ex.: `agenda: academia da Gabriela seg/qua/sex`). Faça o push se o usuário já pediu para publicar ou atualizar o app. Senão, pergunte em uma linha se pode publicar.
 
 ## Perguntas sem edição
 

@@ -1,6 +1,6 @@
 ---
 name: sayang-design
-description: Direção visual e regras de construção do app Sayang (React + Vite + shadcn/ui com Base UI + Tailwind v4, hospedado no GitHub Pages), o relógio de casal de Marcel (Itaúna, Brasil) e Gabriela (Jakarta, Indonésia). Use sempre que for criar ou mudar telas, componentes, cores, textos da interface, traduções ou qualquer funcionalidade nova do app, incluindo as ideias do backlog (recadinhos, notificações, status ao vivo, lista de desejos), mesmo que o pedido seja curto como "coloca um botão" ou "muda essa cor". Para mudanças só na agenda (horários, folgas, datas), use a skill sayang-agenda.
+description: Direção visual e regras de construção do app Sayang (React + Vite + shadcn/ui com Base UI + Tailwind v4, hospedado no Cloudflare Pages), o relógio de casal de Marcel (Itaúna, Brasil) e Gabriela (Jakarta, Indonésia). Use sempre que for criar ou mudar telas, componentes, cores, textos da interface, traduções ou qualquer funcionalidade nova do app, incluindo as ideias do backlog (recadinhos, notificações, status ao vivo, lista de desejos), mesmo que o pedido seja curto como "coloca um botão" ou "muda essa cor". Para mudanças só na agenda (horários, folgas, datas), use a skill sayang-agenda.
 ---
 
 # Design e construção do Sayang
@@ -80,11 +80,12 @@ Toda frase visível existe em **português, inglês e indonésio**, em `src/lib/
   - `src/lib/learn-sync.ts`: com o cofre conectado, junta o progresso do aparelho com `doc.learn` (vale a resposta mais recente de cada palavra) e envia ao sair de uma lição. É daí que vem a linha "Gabriela já aprendeu…". Fica fora do `learn.ts` pra o `check:lessons` rodar sem o cofre;
   - `src/lib/speech.ts`: pronúncia pela voz do celular.
   Ao acrescentar conteúdo, confira as traduções com cuidado. O indonésio do casal é o falado (nggak, lagi, kangen), mas o vocabulário-base usa a forma padrão, com o jeito falado nas notas.
-- O site é estático (GitHub Pages), mas tem três formas de guardar ou enviar coisas entre os dois sem servidor próprio.
+- `src/lib/access.ts` + `access-notice.tsx`: o site fica atrás do Cloudflare Access (login por código no e-mail, sessão de 1 mês). O app instalado abre pelo cache mesmo com a sessão vencida; quando `entrar/` responde com redirecionamento, aparece o aviso pra entrar de novo. `public/entrar/` fica fora do cache do service worker (`globIgnores` e `navigateFallbackDenylist` no `vite.config.ts`) e não pode entrar nele.
+- O site é estático (Cloudflare Pages), mas tem três formas de guardar ou enviar coisas entre os dois sem servidor próprio.
 
 ### Cofre (`src/lib/vault/`): o que um escreve e o outro lê
 
-Motivos do pote, cartas "abra quando…", recados de quando acordar, os medos com a conversa de cada um (`fears.tsx`), o aniversário que cada um colocou (`birthdays.tsx`) e o progresso do Aprender ficam em `vault.json`, no branch `vault` deste repositório. O arquivo é criptografado com AES-GCM, usando uma chave derivada da senha do casal (PBKDF2, 310 mil iterações). O app lê e grava pela API do GitHub com uma chave pessoal (fine-grained token, Contents de leitura e escrita só neste repositório). O branch separado faz com que salvar não republique o site.
+Motivos do pote, cartas "abra quando…", recados de quando acordar, os medos com a conversa de cada um (`fears.tsx`), o aniversário que cada um colocou (`birthdays.tsx`) e o progresso do Aprender ficam em `vault.json`, no repositório privado `marcelcorradi/sayang-cofre` (`REPO` em `storage.ts`). O arquivo é criptografado com AES-GCM, usando uma chave derivada da senha do casal (PBKDF2, 310 mil iterações). O app lê e grava pela API do GitHub com uma chave pessoal (fine-grained token, Contents de leitura e escrita só no `sayang-cofre`). O repositório separado faz com que salvar não republique o site e com que a chave do link de configuração não consiga mexer no código do app.
 
 - Em componentes, use `useVault()`: `doc` (o conteúdo aberto ou `null`), `update(d => { … })` (relê, aplica, criptografa e salva, e tenta de novo se os dois salvarem juntos) e `saving`.
 - Para guardar um tipo novo de coisa, adicione o campo em `VaultDoc` (`src/lib/vault/types.ts`) e trate a ausência dele em cofres antigos (`doc.novo ?? []`).

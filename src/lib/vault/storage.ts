@@ -1,11 +1,11 @@
 /**
- * Onde o cofre criptografado mora: um arquivo no repositório, num branch só dele
- * (assim salvar um recado não republica o site).
+ * Onde o cofre criptografado mora: um repositório privado só dele, separado do código do site.
+ * Assim salvar um recado não republica o site, e a chave do cofre não consegue mexer no app.
  */
 export const REPO = {
   owner: "marcelcorradi",
-  name: "sayang-timezones",
-  branch: "vault",
+  name: "sayang-cofre",
+  branch: "main",
   path: "vault.json",
 }
 

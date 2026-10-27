@@ -255,6 +255,8 @@ const pt = {
 
   hoursShort: "{h}h",
   minutesShort: "{m}min",
+
+  accessExpired: "Faz tempo que você não entra. Toca aqui pra entrar de novo e receber as novidades do app.",
 }
 
 type Dict = Record<keyof typeof pt, string>
@@ -514,6 +516,8 @@ const en: Dict = {
 
   hoursShort: "{h}h",
   minutesShort: "{m}m",
+
+  accessExpired: "It's been a while since you signed in. Tap here to sign in again and get the app's latest updates.",
 }
 
 const id: Dict = {
@@ -771,6 +775,8 @@ const id: Dict = {
 
   hoursShort: "{h} jam",
   minutesShort: "{m} mnt",
+
+  accessExpired: "Udah lama kamu nggak masuk. Ketuk di sini buat masuk lagi biar dapet update terbaru aplikasinya.",
 }
 
 export type TranslationKey = keyof typeof pt

@@ -5,7 +5,7 @@ description: Porta de entrada para qualquer pedido sobre o app Sayang, o relógi
 
 # Sayang: por onde começar
 
-O Sayang é um site estático (GitHub Pages) que mostra o que Marcel e Gabriela estão fazendo agora, quando os dois podem se falar e quanto falta pro reencontro, em pt, en e id. Quem pede é quase sempre o Marcel, em português informal e às vezes com uma frase só. O trabalho desta skill é pegar esse pedido, mandar pra skill certa, e garantir que o resultado chegue no ar sem quebrar nada.
+O Sayang é um site estático (Cloudflare Pages, com login do Cloudflare Access) que mostra o que Marcel e Gabriela estão fazendo agora, quando os dois podem se falar e quanto falta pro reencontro, em pt, en e id. Quem pede é quase sempre o Marcel, em português informal e às vezes com uma frase só. O trabalho desta skill é pegar esse pedido, mandar pra skill certa, e garantir que o resultado chegue no ar sem quebrar nada.
 
 As skills especializadas já sabem fazer o trabalho de cada área. Esta não repete o que elas dizem: ela escolhe, ordena e fecha.
 
@@ -47,7 +47,7 @@ Parte que exige servidor ou algo rodando com o app fechado (avisos automáticos,
 
 ## 4. O que nunca fazer
 
-- **Branch `vault`**: tem os recados, cartas e motivos do casal, criptografados. Não leia, não decifre, não altere, nem para depurar, a menos que o Marcel peça com essas palavras. Para testar o cofre, use `VITE_VAULT_LOCAL=1`.
+- **Repositório `sayang-cofre`**: tem os recados, cartas e motivos do casal, criptografados. Não leia, não decifre, não altere, nem para depurar, a menos que o Marcel peça com essas palavras. Para testar o cofre, use `VITE_VAULT_LOCAL=1`.
 - Token do GitHub, senha do casal ou tópico do ntfy em código, log, commit ou resposta.
 - Propor de novo o que o Marcel já descartou ou pausou. A lista está em `ideas.md` ("Pausado" e "Descartadas"). O Cinema está pausado e, se voltar, precisa funcionar com o Kodi.
 
@@ -92,7 +92,7 @@ Uma mensagem por mudança coerente, em português, no padrão do histórico:
 
 ### Publicar
 
-Cada push na `main` publica o site. Faça o push se o Marcel já pediu pra publicar ou atualizar o app. Senão, pergunte em uma linha ("Posso publicar?"). Depois do push, se o `gh` estiver disponível, confira o deploy com `gh run list --limit 1` e avise se falhou.
+Cada push na `main` publica o site. Faça o push se o Marcel já pediu pra publicar ou atualizar o app. Senão, pergunte em uma linha ("Posso publicar?"). O Cloudflare faz o build sozinho e marca o commit no GitHub. Depois do push, confira com `gh api repos/marcelcorradi/sayang-timezones/commits/main/check-runs --jq '.check_runs[] | {name, status, conclusion}'` e avise se falhou.
 
 ### Resposta
 

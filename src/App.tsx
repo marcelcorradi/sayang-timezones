@@ -2,6 +2,7 @@ import * as React from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { BookOpen01Icon, Calendar01Icon, Clock01Icon, FavouriteIcon } from "@hugeicons/core-free-icons"
 
+import { AccessNotice } from "@/components/access-notice"
 import { DayView } from "@/components/day-view"
 import { InstallButton } from "@/components/install-button"
 import { NowView } from "@/components/now-view"
@@ -42,6 +43,7 @@ export function App() {
       </header>
 
       <main className="px-4 pt-2 pb-28">
+        <AccessNotice />
         <TabsContent value="now">
           <NowView me={me} now={now} />
         </TabsContent>

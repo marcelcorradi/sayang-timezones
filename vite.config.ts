@@ -4,8 +4,8 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
 
-// GitHub Pages serve o app em https://<usuario>.github.io/sayang-timezones/
-const base = process.env.BASE_PATH ?? "/sayang-timezones/"
+// O Cloudflare Pages serve o app na raiz do domínio.
+const base = process.env.BASE_PATH ?? "/"
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -35,6 +35,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
+        // entrar/ sempre vai pela rede, pra passar pelo login do Cloudflare (ver src/lib/access.ts).
+        globIgnores: ["entrar/**"],
+        navigateFallbackDenylist: [new RegExp(`^${base}entrar`)],
       },
     }),
   ],

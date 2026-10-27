@@ -4,14 +4,14 @@ O relógio do Marcel (Itaúna, Brasil) e da Gabriela (Jakarta, Indonésia): o qu
 
 ## No celular
 
-Abra o link do GitHub Pages e use "Adicionar à tela inicial" (Safari no iPhone, Chrome no Android). O app abre como aplicativo e funciona sem internet. Na engrenagem, "Copiar link pra Gabriela" gera um link que já abre configurado para ela, em indonésio.
+Abra o endereço do app no Cloudflare (`<projeto>.pages.dev`), entre com o código que chega no e-mail e use "Adicionar à tela inicial" (Safari no iPhone, Chrome no Android). O app abre como aplicativo e funciona sem internet. Na engrenagem, "Copiar link pra Gabriela" gera um link que já abre configurado para ela, em indonésio.
 
 ## Recados, cartas, pote e toques
 
-Essas funções guardam o que vocês escrevem num **cofre criptografado**, dentro deste repositório (branch `vault`). Só quem sabe a senha do casal consegue ler. Pra ativar, uma vez só:
+Essas funções guardam o que vocês escrevem num **cofre criptografado**, no repositório privado [`sayang-cofre`](https://github.com/marcelcorradi/sayang-cofre). Só quem sabe a senha do casal consegue ler. Pra ativar, uma vez só:
 
 1. Crie uma chave no GitHub em [Settings → Personal access tokens → Fine-grained](https://github.com/settings/personal-access-tokens/new):
-   - em *Repository access*, escolha **Only select repositories** → `sayang-timezones`;
+   - em *Repository access*, escolha **Only select repositories** → `sayang-cofre` (só ele: assim quem pegar o link não consegue mexer no app);
    - em *Permissions → Contents*, escolha **Read and write**;
    - escolha a validade mais longa possível.
 2. No app, toque em **Ativar recados e cartas**, cole a chave, escolha uma senha do casal e toque em **Criar cofre**.
@@ -37,7 +37,15 @@ VITE_VAULT_LOCAL=1 npm run dev   # cofre no navegador, sem GitHub
 npm run icons                    # regenera os ícones a partir de public/icon.svg
 ```
 
-Cada push na `main` publica o site pelo GitHub Actions ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)).
+Cada push na `main` publica o site pelo Cloudflare Pages.
+
+## Hospedagem e login
+
+O repositório é privado, e o site fica no Cloudflare Pages, atrás do Cloudflare Access. Só os e-mails do Marcel e da Gabriela entram.
+
+- **Cloudflare Pages** (Workers & Pages → projeto ligado a este repositório): build command `npm run check && npm run check:lessons && npm run build`, output `dist`, variável `NODE_VERSION=24`.
+- **Cloudflare Zero Trust → Access → Applications** (Self-hosted): domínios `<projeto>.pages.dev` e `*.<projeto>.pages.dev`, política *Allow* com os dois e-mails, login por *One-time PIN*, *Session duration* de 1 mês.
+- Com a sessão vencida, o app instalado continua abrindo pelo cache, e o cofre e os toques funcionam normalmente. Só as versões novas deixam de chegar, e o app mostra um aviso pra entrar de novo (`/entrar/`).
 
 Stack: React, Vite, Tailwind v4, shadcn/ui (Base UI) e vite-plugin-pwa. O clima vem da [Open-Meteo](https://open-meteo.com/).
 
